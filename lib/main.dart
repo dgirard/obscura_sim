@@ -14,12 +14,8 @@ import 'services/image_processing_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Permettre les deux orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
+  // Ne pas restreindre les orientations - laisser le système gérer automatiquement
+  // Cela permet une rotation libre de l'application
 
   // Style de la barre de statut
   SystemChrome.setSystemUIOverlayStyle(
