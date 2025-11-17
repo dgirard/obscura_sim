@@ -6,6 +6,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:image/image.dart' as img;
 import '../bloc/filter/filter_bloc.dart';
 import '../bloc/gallery/gallery_bloc.dart';
 import '../models/photo.dart';
@@ -30,6 +31,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
   double _totalMotion = 0;
   String _debugStatus = "Initializing...";
   DeviceOrientation? _currentOrientation;
+  Orientation? _deviceOrientation;
 
   @override
   void initState() {
@@ -165,7 +167,28 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
       final Directory appDir = await getApplicationDocumentsDirectory();
       final String fileName = 'obscura_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final String savedPath = '${appDir.path}/$fileName';
-      await photo.saveTo(savedPath);
+
+      // Check if we need to rotate the image for portrait mode
+      if (_deviceOrientation == Orientation.portrait) {
+        // The camera always captures in landscape, so we need to rotate for portrait
+        final bytes = await photo.readAsBytes();
+        final img.Image? image = img.decodeImage(bytes);
+
+        if (image != null) {
+          // Rotate 90 degrees clockwise for portrait
+          final img.Image rotated = img.copyRotate(image, angle: 90);
+
+          // Save the rotated image
+          final File file = File(savedPath);
+          await file.writeAsBytes(img.encodeJpg(rotated));
+        } else {
+          // Fallback if image decoding fails
+          await photo.saveTo(savedPath);
+        }
+      } else {
+        // Landscape mode - save as is
+        await photo.saveTo(savedPath);
+      }
 
       // Add to gallery
       final filterState = context.read<FilterBloc>().state as FilterSelected;
@@ -201,6 +224,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
       backgroundColor: Colors.black,
       body: OrientationBuilder(
         builder: (context, orientation) {
+          _deviceOrientation = orientation; // Store current orientation
           return Stack(
             children: [
               // Camera Preview - Avec effet camera obscura
