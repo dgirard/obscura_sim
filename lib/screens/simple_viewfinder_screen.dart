@@ -19,7 +19,8 @@ class SimpleViewfinderScreen extends StatefulWidget {
   State<SimpleViewfinderScreen> createState() => _SimpleViewfinderScreenState();
 }
 
-class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen> {
+class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
+    with WidgetsBindingObserver {
   CameraController? _controller;
   bool _isCapturing = false;
   double _captureProgress = 0;
@@ -28,12 +29,25 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen> {
   StreamSubscription? _accelerometerSubscription;
   double _totalMotion = 0;
   String _debugStatus = "Initializing...";
+  DeviceOrientation? _currentOrientation;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _initializeCamera();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+
+    if (state == AppLifecycleState.inactive) {
+      _controller?.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      _initializeCamera();
+    }
   }
 
   Future<void> _initializeCamera() async {
@@ -173,6 +187,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
     _captureTimer?.cancel();
     _accelerometerSubscription?.cancel();
@@ -184,21 +199,23 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Camera Preview - Avec effet camera obscura
-          if (_controller != null && _controller!.value.isInitialized)
-            Center(
-              child: Transform(
-                alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..rotateZ(3.14159), // Rotation 180° pour effet camera obscura
-                child: AspectRatio(
-                  aspectRatio: _controller!.value.aspectRatio,
-                  child: CameraPreview(_controller!),
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          return Stack(
+            children: [
+              // Camera Preview - Avec effet camera obscura
+              if (_controller != null && _controller!.value.isInitialized)
+                Center(
+                  child: Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()
+                      ..rotateZ(3.14159), // Rotation 180° pour effet camera obscura
+                    child: AspectRatio(
+                      aspectRatio: _controller!.value.aspectRatio,
+                      child: CameraPreview(_controller!),
+                    ),
+                  ),
                 ),
-              ),
-            ),
 
           // Capture overlay
           if (_isCapturing)
@@ -267,96 +284,8 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen> {
             },
           ),
 
-          // Bottom controls
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.only(bottom: 40, top: 20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.7),
-                  ],
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Gallery button
-                  IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const GalleryScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.photo_library),
-                    iconSize: 30,
-                    color: Colors.white70,
-                  ),
-
-                  // Capture button
-                  GestureDetector(
-                    onTapDown: (_) => _startCapture(),
-                    onTapUp: (_) => _stopCapture(),
-                    onTapCancel: _stopCapture,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 4,
-                        ),
-                      ),
-                      child: _isCapturing
-                          ? Padding(
-                              padding: const EdgeInsets.all(4),
-                              child: CircularProgressIndicator(
-                                value: _captureProgress,
-                                strokeWidth: 3,
-                                backgroundColor: Colors.white24,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  _motionLevel > 1.0 ? Colors.red : Colors.white,
-                                ),
-                              ),
-                            )
-                          : Container(
-                              margin: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
-                  ),
-
-                  // Filter button
-                  IconButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const FilterSelectionScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.filter_vintage),
-                    iconSize: 30,
-                    color: Colors.white70,
-                  ),
-                ],
-              ),
-            ),
-          ),
+              // Controls - Position based on orientation
+              _buildControls(context, orientation),
 
           // Debug status overlay (hidden for production)
           // Uncomment for debugging
@@ -382,16 +311,139 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen> {
           ),
           */
 
-          // Loading indicator
-          if (_controller == null || !_controller!.value.isInitialized)
-            const Center(
-              child: CircularProgressIndicator(
-                color: Colors.white24,
-              ),
+              // Loading indicator
+              if (_controller == null || !_controller!.value.isInitialized)
+                const Center(
+                  child: CircularProgressIndicator(
+                    color: Colors.white24,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildControls(BuildContext context, Orientation orientation) {
+    final isPortrait = orientation == Orientation.portrait;
+
+    // Controls widget
+    final controls = Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isPortrait ? 0 : 20,
+        vertical: isPortrait ? 20 : 0,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: isPortrait ? Alignment.topCenter : Alignment.centerLeft,
+          end: isPortrait ? Alignment.bottomCenter : Alignment.centerRight,
+          colors: [
+            Colors.transparent,
+            Colors.black.withOpacity(0.7),
+          ],
+        ),
+      ),
+      child: Flex(
+        direction: isPortrait ? Axis.horizontal : Axis.vertical,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // Gallery button
+          Transform.rotate(
+            angle: isPortrait ? 0 : -1.5708, // Rotate 90° in landscape
+            child: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const GalleryScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.photo_library),
+              iconSize: 30,
+              color: Colors.white70,
             ),
+          ),
+
+          // Capture button
+          GestureDetector(
+            onTapDown: (_) => _startCapture(),
+            onTapUp: (_) => _stopCapture(),
+            onTapCancel: _stopCapture,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white,
+                  width: 4,
+                ),
+              ),
+              child: _isCapturing
+                  ? Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: CircularProgressIndicator(
+                        value: _captureProgress,
+                        strokeWidth: 3,
+                        backgroundColor: Colors.white24,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _motionLevel > 1.0 ? Colors.red : Colors.white,
+                        ),
+                      ),
+                    )
+                  : Container(
+                      margin: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+
+          // Filter button
+          Transform.rotate(
+            angle: isPortrait ? 0 : -1.5708, // Rotate 90° in landscape
+            child: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const FilterSelectionScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.filter_vintage),
+              iconSize: 30,
+              color: Colors.white70,
+            ),
+          ),
         ],
       ),
     );
+
+    // Position controls based on orientation
+    if (isPortrait) {
+      return Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: SafeArea(
+          child: controls,
+        ),
+      );
+    } else {
+      return Positioned(
+        right: 0,
+        top: 0,
+        bottom: 0,
+        child: SafeArea(
+          child: controls,
+        ),
+      );
+    }
   }
 
   String _getFilterName(FilterType filter) {

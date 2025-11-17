@@ -14,9 +14,11 @@ import 'services/image_processing_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Forcer l'orientation portrait
+  // Permettre les deux orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
   ]);
 
   // Style de la barre de statut
