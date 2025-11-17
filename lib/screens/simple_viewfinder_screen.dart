@@ -235,7 +235,9 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                     transform: Matrix4.identity()
                       ..rotateZ(3.14159), // Rotation 180° pour effet camera obscura
                     child: AspectRatio(
-                      aspectRatio: _controller!.value.aspectRatio,
+                      aspectRatio: orientation == Orientation.portrait
+                          ? 1 / _controller!.value.aspectRatio // Inverser en portrait
+                          : _controller!.value.aspectRatio,   // Normal en paysage
                       child: CameraPreview(_controller!),
                     ),
                   ),
