@@ -21,6 +21,7 @@ class Photo extends Equatable {
   final PhotoStatus status;
   final double? motionBlur;  // Niveau de flou de mouvement détecté
   final Uint8List? thumbnailData;
+  final bool isPortrait;  // Indique si la photo a été prise en mode portrait
 
   const Photo({
     required this.id,
@@ -30,6 +31,7 @@ class Photo extends Equatable {
     required this.status,
     this.motionBlur,
     this.thumbnailData,
+    this.isPortrait = false,
   });
 
   Photo copyWith({
@@ -40,6 +42,7 @@ class Photo extends Equatable {
     PhotoStatus? status,
     double? motionBlur,
     Uint8List? thumbnailData,
+    bool? isPortrait,
   }) {
     return Photo(
       id: id ?? this.id,
@@ -49,6 +52,7 @@ class Photo extends Equatable {
       status: status ?? this.status,
       motionBlur: motionBlur ?? this.motionBlur,
       thumbnailData: thumbnailData ?? this.thumbnailData,
+      isPortrait: isPortrait ?? this.isPortrait,
     );
   }
 
@@ -61,6 +65,7 @@ class Photo extends Equatable {
       'status': status.index,
       'motionBlur': motionBlur,
       'thumbnailData': thumbnailData,
+      'isPortrait': isPortrait ? 1 : 0,  // Convertir bool en int pour SQLite
     };
   }
 
@@ -73,9 +78,10 @@ class Photo extends Equatable {
       status: PhotoStatus.values[map['status']],
       motionBlur: map['motionBlur'],
       thumbnailData: map['thumbnailData'],
+      isPortrait: (map['isPortrait'] ?? 0) == 1,  // Convertir int en bool
     );
   }
 
   @override
-  List<Object?> get props => [id, path, capturedAt, filter, status, motionBlur];
+  List<Object?> get props => [id, path, capturedAt, filter, status, motionBlur, isPortrait];
 }

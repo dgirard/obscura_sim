@@ -146,14 +146,19 @@ class _GalleryScreenState extends State<GalleryScreen> {
       );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.all(8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 4,
-        mainAxisSpacing: 4,
-        childAspectRatio: 1,
-      ),
+    // Adapter le nombre de colonnes selon l'orientation
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        final int crossAxisCount = orientation == Orientation.portrait ? 3 : 5;
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(8),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 4,
+            mainAxisSpacing: 4,
+            childAspectRatio: 1,
+          ),
       itemCount: photos.length,
       itemBuilder: (context, index) {
         final photo = photos[index];
@@ -177,7 +182,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // Image inversée pour les négatifs
+                // Image inversée pour les négatifs avec détection d'orientation
                 Transform(
                   alignment: Alignment.center,
                   transform: isNegative
@@ -185,24 +190,27 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         ..rotateX(3.14159)
                         ..rotateY(3.14159))
                       : Matrix4.identity(),
-                  child: photo.thumbnailData != null
-                      ? Image.memory(
-                          photo.thumbnailData!,
-                          fit: BoxFit.cover,
-                        )
-                      : Image.file(
-                          File(photo.path),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.black26,
-                              child: const Icon(
-                                Icons.broken_image,
-                                color: Colors.white24,
-                              ),
-                            );
-                          },
-                        ),
+                  child: RotatedBox(
+                    quarterTurns: photo.isPortrait ? 1 : 0,  // Rotate 90° if portrait
+                    child: photo.thumbnailData != null
+                        ? Image.memory(
+                            photo.thumbnailData!,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.file(
+                            File(photo.path),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.black26,
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  color: Colors.white24,
+                                ),
+                              );
+                            },
+                          ),
+                  ),
                 ),
                 // Overlay pour les négatifs
                 if (isNegative)
@@ -242,7 +250,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
         );
       },
     );
+      },
+    );
   }
+
 
   IconData _getFilterIcon(FilterType filter) {
     switch (filter) {

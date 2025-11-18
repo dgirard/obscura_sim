@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Allow sharing files from the app's private directory -->
+    <files-path name="files" path="." />
+
+    <!-- Allow sharing from cache directory -->
+    <cache-path name="cache" path="." />
+
+    <!-- Allow sharing from external files directory -->
+    <external-files-path name="external_files" path="." />
+
+    <!-- Allow sharing from external cache directory -->
+    <external-cache-path name="external_cache" path="." />
+</paths>

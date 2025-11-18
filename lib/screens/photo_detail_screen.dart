@@ -30,24 +30,27 @@ class PhotoDetailScreen extends StatelessWidget {
                     ..rotateX(3.14159)
                     ..rotateY(3.14159))
                   : Matrix4.identity(),
-              child: InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: Image.file(
-                  File(photo.path),
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.black,
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image,
-                          color: Colors.white24,
-                          size: 64,
+              child: RotatedBox(
+                quarterTurns: photo.isPortrait ? 1 : 0,  // Rotation pour les photos portrait
+                child: InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Image.file(
+                    File(photo.path),
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.black,
+                        child: const Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            color: Colors.white24,
+                            size: 64,
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -375,14 +378,56 @@ class PhotoDetailScreen extends StatelessWidget {
     );
   }
 
-  void _sharePhoto(BuildContext context) {
-    // Implémentation du partage
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Fonction de partage à implémenter'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+  Future<void> _sharePhoto(BuildContext context) async {
+    const platform = MethodChannel('com.obscurasim.app/mediastore');
+
+    try {
+      final file = File(photo.path);
+
+      if (!await file.exists()) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Impossible de partager: fichier introuvable'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Sauvegarder dans la galerie publique (MediaStore) comme Google Photos
+      // Cela permet à Flickr d'accéder à l'image
+      final String fileName = 'obscura_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      final String? contentUri = await platform.invokeMethod('saveToMediaStore', {
+        'filePath': photo.path,
+        'displayName': fileName,
+      });
+
+      if (contentUri == null || contentUri.isEmpty) {
+        throw Exception('Échec de la sauvegarde dans la galerie');
+      }
+
+      // Utiliser l'Intent Android natif pour partager (comme la galerie système)
+      await platform.invokeMethod('shareWithNativeIntent', {
+        'contentUri': contentUri,
+        'text': 'Photo Obscura${photo.filter != FilterType.none ? ' - ${_getFilterName(photo.filter)}' : ''}',
+        'subject': 'Ma photo ObscuraSim',
+      });
+
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors du partage: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   String _getFilterName(FilterType filter) {

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,15 +21,17 @@ class AddPhoto extends GalleryEvent {
   final String path;
   final FilterType filter;
   final double motionBlur;
+  final bool isPortrait;
 
   const AddPhoto({
     required this.path,
     required this.filter,
     required this.motionBlur,
+    required this.isPortrait,
   });
 
   @override
-  List<Object?> get props => [path, filter, motionBlur];
+  List<Object?> get props => [path, filter, motionBlur, isPortrait];
 }
 
 class DevelopPhoto extends GalleryEvent {
@@ -144,6 +147,7 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
         status: PhotoStatus.negative,
         motionBlur: event.motionBlur,
         thumbnailData: thumbnail,
+        isPortrait: event.isPortrait,
       );
 
       await _databaseService.insertPhoto(photo);
@@ -158,22 +162,28 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
     Emitter<GalleryState> emit,
   ) async {
     try {
-      // Créer une version développée (non inversée)
+      // Créer une version développée (réinverser le négatif) avec rotation si nécessaire
       final developedPath = await _imageService.processImage(
         event.photo.path,
         event.photo.filter,
         0, // Pas de flou supplémentaire lors du développement
-        invert: false, // Image normale pour la version développée
+        invert: true, // Réinverser le négatif pour obtenir l'image normale
+        rotateQuarterTurns: event.photo.isPortrait ? 1 : 0, // Rotation pour les photos portrait
       );
 
-      // Sauvegarder dans la galerie du téléphone
-      final Directory? externalDir = await getExternalStorageDirectory();
-      if (externalDir != null) {
-        final File developedFile = File(developedPath);
-        final String galleryPath = '${externalDir.path}/ObscuraSim';
-        await Directory(galleryPath).create(recursive: true);
-        final String finalPath = '$galleryPath/${event.photo.id}_developed.jpg';
-        await developedFile.copy(finalPath);
+      // Sauvegarder dans la galerie publique (MediaStore) pour rendre accessible aux autres apps
+      const platform = MethodChannel('com.obscurasim.app/mediastore');
+      final String fileName = 'obscura_${event.photo.id}_developed.jpg';
+
+      try {
+        await platform.invokeMethod('saveToMediaStore', {
+          'filePath': developedPath,
+          'displayName': fileName,
+        });
+      } catch (e) {
+        // Si la sauvegarde dans MediaStore échoue, continuer quand même
+        // (la photo sera toujours dans l'app)
+        print('Avertissement: Échec de la sauvegarde dans la galerie publique: $e');
       }
 
       final updatedPhoto = event.photo.copyWith(
@@ -192,6 +202,21 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
     Emitter<GalleryState> emit,
   ) async {
     try {
+      // Si la photo est développée, la supprimer aussi du MediaStore (galerie publique)
+      if (event.photo.status == PhotoStatus.developed) {
+        const platform = MethodChannel('com.obscurasim.app/mediastore');
+        final String fileName = 'obscura_${event.photo.id}_developed.jpg';
+
+        try {
+          await platform.invokeMethod('deleteFromMediaStore', {
+            'fileName': fileName,
+          });
+        } catch (e) {
+          // Si la suppression du MediaStore échoue, continuer quand même
+          print('Avertissement: Échec de la suppression dans MediaStore: $e');
+        }
+      }
+
       await _databaseService.deletePhoto(event.photo.id);
 
       // Supprimer les fichiers

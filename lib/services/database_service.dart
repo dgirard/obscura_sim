@@ -15,8 +15,9 @@ class DatabaseService {
     final String path = join(await getDatabasesPath(), 'obscura_sim.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -29,9 +30,16 @@ class DatabaseService {
         filter INTEGER NOT NULL,
         status INTEGER NOT NULL,
         motionBlur REAL,
-        thumbnailData BLOB
+        thumbnailData BLOB,
+        isPortrait INTEGER DEFAULT 0
       )
     ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE photos ADD COLUMN isPortrait INTEGER DEFAULT 0');
+    }
   }
 
   Future<void> insertPhoto(Photo photo) async {

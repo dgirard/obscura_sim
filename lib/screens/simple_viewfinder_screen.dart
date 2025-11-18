@@ -160,50 +160,127 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
   }
 
   Future<void> _capturePhoto() async {
+    print('_capturePhoto called');
+
+    // Check if controller is ready
+    if (_controller == null || !_controller!.value.isInitialized) {
+      print('Camera controller not ready');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Camera not ready, please wait'),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+      return;
+    }
+
     try {
+      // Vibration feedback to confirm capture start
+      HapticFeedback.heavyImpact();
+      print('Taking picture...');
+
       final XFile photo = await _controller!.takePicture();
+      print('Photo taken: ${photo.path}');
 
       // Save to app directory
       final Directory appDir = await getApplicationDocumentsDirectory();
+      print('App directory: ${appDir.path}');
       final String fileName = 'obscura_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final String savedPath = '${appDir.path}/$fileName';
+      print('Will save to: $savedPath');
 
       // Check if we need to rotate the image for portrait mode
       if (_deviceOrientation == Orientation.portrait) {
-        // The camera always captures in landscape, so we need to rotate for portrait
-        final bytes = await photo.readAsBytes();
-        final img.Image? image = img.decodeImage(bytes);
+        print('Portrait mode detected, rotating image...');
+        try {
+          // The camera always captures in landscape, so we need to rotate for portrait
+          final bytes = await photo.readAsBytes();
+          final img.Image? image = img.decodeImage(bytes);
 
-        if (image != null) {
-          // Rotate 90 degrees clockwise for portrait
-          final img.Image rotated = img.copyRotate(image, angle: 90);
+          if (image != null) {
+            // Rotate 90 degrees clockwise for portrait
+            final img.Image rotated = img.copyRotate(image, angle: 90);
 
-          // Save the rotated image
-          final File file = File(savedPath);
-          await file.writeAsBytes(img.encodeJpg(rotated));
-        } else {
-          // Fallback if image decoding fails
+            // Save the rotated image
+            final File file = File(savedPath);
+            await file.writeAsBytes(img.encodeJpg(rotated));
+          } else {
+            // Fallback if image decoding fails
+            await photo.saveTo(savedPath);
+          }
+        } catch (rotateError) {
+          // If rotation fails, save without rotation
           await photo.saveTo(savedPath);
         }
       } else {
         // Landscape mode - save as is
+        print('Landscape mode, saving directly...');
         await photo.saveTo(savedPath);
       }
 
-      // Add to gallery
-      final filterState = context.read<FilterBloc>().state as FilterSelected;
-      context.read<GalleryBloc>().add(
-        AddPhoto(
-          path: savedPath,
-          filter: filterState.selectedFilter,
-          motionBlur: _totalMotion / 3,
-        ),
-      );
+      // Verify file was saved
+      final File savedFile = File(savedPath);
+      final bool fileExists = await savedFile.exists();
+      print('File exists at $savedPath: $fileExists');
 
-      HapticFeedback.mediumImpact();
+      if (fileExists) {
+        final int fileSize = await savedFile.length();
+        print('File size: $fileSize bytes');
+        // Add to gallery - handle potential FilterBloc state issues
+        try {
+          final filterState = context.read<FilterBloc>().state;
+          final FilterType selectedFilter = (filterState is FilterSelected)
+              ? filterState.selectedFilter
+              : FilterType.none;
+
+          context.read<GalleryBloc>().add(
+            AddPhoto(
+              path: savedPath,
+              filter: selectedFilter,
+              motionBlur: _totalMotion / 3,
+              isPortrait: _deviceOrientation == Orientation.portrait,
+            ),
+          );
+        } catch (blocError) {
+          // Even if bloc fails, the photo is saved
+          print('Gallery bloc error: $blocError');
+        }
+
+        // Success feedback
+        HapticFeedback.mediumImpact();
+
+        // Show visual confirmation
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Photo sauvegardée'),
+              duration: Duration(seconds: 1),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception('File not saved at $savedPath');
+      }
+
       _stopCapture();
     } catch (e) {
       print('Capture error: $e');
+
+      // Show error to user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur de capture: $e'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
       _stopCapture();
     }
   }
@@ -392,11 +469,17 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
             ),
           ),
 
-          // Capture button
+          // Capture button - Simplified for testing
           GestureDetector(
-            onTapDown: (_) => _startCapture(),
-            onTapUp: (_) => _stopCapture(),
-            onTapCancel: _stopCapture,
+            onTap: () async {
+              // Simple tap for instant capture (for testing)
+              print('Capture button tapped!');
+              debugPrint('DEBUG: Capture button tapped!');
+              await _capturePhoto();
+            },
+            onLongPressStart: (_) => _startCapture(),
+            onLongPressEnd: (_) => _stopCapture(),
+            onLongPressCancel: _stopCapture,
             child: Container(
               width: 80,
               height: 80,

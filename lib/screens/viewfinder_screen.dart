@@ -50,6 +50,7 @@ class _ViewfinderScreenState extends State<ViewfinderScreen> {
                 path: state.imagePath,
                 filter: filterState.selectedFilter,
                 motionBlur: state.totalMotion,
+                isPortrait: false, // Default for legacy viewfinder
               ),
             );
 

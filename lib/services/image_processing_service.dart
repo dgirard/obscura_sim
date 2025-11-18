@@ -11,7 +11,7 @@ class ImageProcessingService {
     String imagePath,
     FilterType filter,
     double motionBlur,
-    {bool invert = false}
+    {bool invert = false, int rotateQuarterTurns = 0}
   ) async {
     // Lire l'image
     final File imageFile = File(imagePath);
@@ -25,6 +25,12 @@ class ImageProcessingService {
     // Appliquer l'inversion si nécessaire (camera obscura effect)
     if (invert) {
       image = img.flip(image, direction: img.FlipDirection.both);
+    }
+
+    // Appliquer la rotation si nécessaire (pour portrait)
+    if (rotateQuarterTurns != 0) {
+      final degrees = rotateQuarterTurns * 90;
+      image = img.copyRotate(image, angle: degrees);
     }
 
     // Appliquer le filtre
