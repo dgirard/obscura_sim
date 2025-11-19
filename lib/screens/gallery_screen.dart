@@ -168,7 +168,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => PhotoDetailScreen(photo: photo),
+                builder: (_) => PhotoDetailScreen(
+                  photos: photos,
+                  initialIndex: index,
+                ),
               ),
             );
           },
@@ -263,6 +266,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
         return Icons.gradient;
       case FilterType.glassPlate:
         return Icons.lens;
+      case FilterType.cyanotype:
+        return Icons.water_drop;
+      case FilterType.daguerreotype:
+        return Icons.brightness_high;
       default:
         return Icons.filter_none;
     }

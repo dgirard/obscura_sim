@@ -155,7 +155,8 @@ class _ViewfinderScreenState extends State<ViewfinderScreen> {
                       GestureDetector(
                         onTapDown: (_) {
                           if (state is CameraReady) {
-                            context.read<CameraBloc>().add(StartCapture());
+                            final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+                            context.read<CameraBloc>().add(StartCapture(isPortrait: isPortrait));
                             HapticFeedback.lightImpact();
                           }
                         },
@@ -299,6 +300,10 @@ class _ViewfinderScreenState extends State<ViewfinderScreen> {
         return 'Sépia';
       case FilterType.glassPlate:
         return 'Plaque de Verre';
+      case FilterType.cyanotype:
+        return 'Cyanotype';
+      case FilterType.daguerreotype:
+        return 'Daguerréotype';
       default:
         return '';
     }

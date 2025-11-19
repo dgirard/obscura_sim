@@ -2,12 +2,15 @@ import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import '../../models/photo.dart';
+import '../../repositories/camera_repository.dart';
+import '../../services/image_processing_service.dart';
 import 'camera_event.dart';
 import 'camera_state.dart';
 
 class CameraBloc extends Bloc<CameraEvent, CameraState> {
+  final ImageProcessingService _imageProcessingService;
+  final CameraRepository _cameraRepository;
   CameraController? _controller;
   List<CameraDescription>? _cameras;
   StreamSubscription? _accelerometerSubscription;
@@ -15,10 +18,16 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
   double _totalMotion = 0;
   double _captureProgress = 0;
 
-  CameraBloc() : super(CameraInitial()) {
+  CameraBloc({
+    required ImageProcessingService imageProcessingService,
+    required CameraRepository cameraRepository,
+  })  : _imageProcessingService = imageProcessingService,
+        _cameraRepository = cameraRepository,
+        super(CameraInitial()) {
     on<InitializeCamera>(_onInitializeCamera);
     on<DisposeCamera>(_onDisposeCamera);
     on<StartCapture>(_onStartCapture);
+    on<InstantCapture>(_onInstantCapture);
     on<StopCapture>(_onStopCapture);
     on<UpdateMotionLevel>(_onUpdateMotionLevel);
   }
@@ -28,7 +37,7 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     Emitter<CameraState> emit,
   ) async {
     try {
-      _cameras = await availableCameras();
+      _cameras = await _cameraRepository.getAvailableCameras();
       if (_cameras == null || _cameras!.isEmpty) {
         emit(const CameraError('Aucune caméra disponible'));
         return;
@@ -40,7 +49,7 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
         orElse: () => _cameras!.first,
       );
 
-      _controller = CameraController(
+      _controller = _cameraRepository.createController(
         camera,
         ResolutionPreset.high,
         enableAudio: false,
@@ -71,7 +80,7 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     _captureProgress = 0;
 
     // Démarrer la surveillance de l'accéléromètre
-    _accelerometerSubscription = userAccelerometerEventStream().listen((event) {
+    _accelerometerSubscription = _cameraRepository.accelerometerEvents.listen((event) {
       final motion = (event.x.abs() + event.y.abs() + event.z.abs()) / 3;
       _totalMotion += motion;
       add(UpdateMotionLevel(motion));
@@ -88,7 +97,7 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
 
       if (_captureProgress >= 1.0) {
         timer.cancel();
-        await _capturePhoto();
+        await _capturePhoto(emit, isPortrait: event.isPortrait, motionBlur: _totalMotion / 3);
       } else {
         emit(CameraCapturing(
           controller: _controller!,
@@ -99,27 +108,63 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     });
   }
 
-  Future<void> _capturePhoto() async {
+  Future<void> _onInstantCapture(
+    InstantCapture event,
+    Emitter<CameraState> emit,
+  ) async {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      return;
+    }
+    await _capturePhoto(emit, isPortrait: event.isPortrait, motionBlur: 0);
+  }
+
+  Future<void> _capturePhoto(
+    Emitter<CameraState> emit, {
+    required bool isPortrait,
+    required double motionBlur,
+  }) async {
     try {
       final XFile photo = await _controller!.takePicture();
 
       // Sauvegarder dans le dossier de l'app
-      final Directory appDir = await getApplicationDocumentsDirectory();
+      final Directory appDir = await _cameraRepository.getDocumentsDirectory();
       final String fileName = 'obscura_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final String savedPath = '${appDir.path}/$fileName';
 
-      await photo.saveTo(savedPath);
-
-      emit(CameraCaptured(
-        imagePath: savedPath,
-        totalMotion: _totalMotion / 3, // Moyenne sur 3 secondes
-      ));
+      // Si portrait, on doit pivoter l'image
+      if (isPortrait) {
+        // On sauvegarde temporairement pour le traitement
+        await photo.saveTo(savedPath);
+        
+        // Utiliser le service pour la rotation (via compute)
+        final processedPath = await _imageProcessingService.processImage(
+          savedPath,
+          FilterType.none, // Pas de filtre ici
+          0, // Pas de flou ici, on le stocke en métadonnée
+          rotateQuarterTurns: 1, // Rotation 90 degrés
+        );
+        
+        emit(CameraCaptured(
+          imagePath: processedPath,
+          totalMotion: motionBlur,
+        ));
+      } else {
+        await photo.saveTo(savedPath);
+        emit(CameraCaptured(
+          imagePath: savedPath,
+          totalMotion: motionBlur,
+        ));
+      }
 
       // Retour à l'état prêt après capture
       await Future.delayed(const Duration(seconds: 1));
-      emit(CameraReady(_controller!));
+      if (!emit.isDone) {
+         emit(CameraReady(_controller!));
+      }
     } catch (e) {
-      emit(CameraError('Erreur de capture: ${e.toString()}'));
+      if (!emit.isDone) {
+        emit(CameraError('Erreur de capture: ${e.toString()}'));
+      }
     }
   }
 
@@ -141,7 +186,7 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     UpdateMotionLevel event,
     Emitter<CameraState> emit,
   ) {
-    // Mise à jour gérée dans StartCapture
+    // Mise à jour gérée dans StartCapture via le state CameraCapturing
   }
 
   Future<void> _onDisposeCamera(

@@ -1,111 +1,90 @@
-# ObscuraSim
+# ObscuraSim 📸
 
-Une application Flutter qui simule l'expérience photographique d'une camera obscura.
+![Flutter Version](https://img.shields.io/badge/flutter-3.9.2-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-## Fonctionnalités
+**ObscuraSim** est une application mobile expérimentale développée avec Flutter qui transforme votre smartphone en une véritable *camera obscura* numérique.
 
-### 📸 Viseur Inversé
-- Prévisualisation en temps réel avec double inversion (verticale et horizontale)
-- Simule la vision sur plaque de verre dépoli d'une chambre photographique ancienne
+L'application ne se contente pas d'appliquer des filtres ; elle simule l'expérience physique et optique des premiers appareils photographiques, invitant l'utilisateur à ralentir et à composer ses images avec soin.
 
-### ⏳ Capture Lente
-- Maintien du bouton pendant 3 secondes pour "exposer" la photo
-- Détection de mouvement via l'accéléromètre
-- Application automatique de flou de mouvement si l'appareil bouge
+---
 
-### 🎨 Filtres d'Époque
-- **Monochrome** : Noir et blanc avec grain élevé
-- **Sépia** : Teintes brunes chaudes vintage
-- **Plaque de Verre** : Contraste élevé, vignettage et imperfections
+## ✨ Fonctionnalités Clés
 
-### 🖼️ Galerie "La Chambre Noire"
-- **Négatifs** : Photos capturées affichées inversées
-- **Développement** : Processus de redressement et traitement
-- **Photos Développées** : Prêtes à l'export et au partage
+### 🔄 Le Viseur Inversé
+Fidèle à l'optique d'une chambre noire, l'image dans le viseur est **inversée à 180 degrés** (haut/bas et gauche/droite). Cette contrainte créative force l'œil à se concentrer sur la composition, les lignes et la lumière plutôt que sur le sujet lui-même.
 
-## Installation
+### 🧪 Laboratoire de Développement
+Les photos ne sont pas instantanément disponibles.
+1.  **Capture** : Prenez une photo (mode instantané ou pose longue de 3s).
+2.  **Négatif** : L'image est stockée sous forme de "négatif" (inversé).
+3.  **Développement** : Vous devez "développer" manuellement vos meilleures prises dans la chambre noire virtuelle pour obtenir l'image finale redressée.
 
-### Prérequis
-- Flutter 3.9.2 ou supérieur
-- Android SDK 24+ (Android 7.0)
-- Un appareil Android ou émulateur
+### 🎞️ Procédés Historiques (Filtres)
+L'application propose des traitements d'image avancés simulant des procédés chimiques réels :
+*   **Monochrome** : Un noir et blanc granuleux classique.
+*   **Sépia** : Le vieillissement chaleureux des tirages anciens.
+*   **Plaque de Verre** : Contraste fort, vignettage et imperfections de surface (poussières, rayures).
+*   **Cyanotype** : Le célèbre "Bleu de Prusse", monochrome bleu profond et cyan.
+*   **Daguerréotype** : Rendu métallique, argenté et très détaillé avec un fort vignettage.
 
-### Étapes
+### 🌊 Gestion du Mouvement
+*   **Pose Longue** : Maintenez le déclencheur pour une exposition de 3 secondes.
+*   **Flou Cinétique** : L'accéléromètre du téléphone est utilisé pour détecter les micro-mouvements pendant la pose et appliquer un flou de bougé réaliste si vous n'êtes pas stable.
 
-1. Cloner le dépôt et naviguer dans le dossier
-```bash
-cd obscura_sim
-```
+---
 
-2. Installer les dépendances
-```bash
-flutter pub get
-```
+## 🛠️ Architecture Technique
 
-3. Lancer l'application
-```bash
-flutter run
-```
+Ce projet est conçu comme une démonstration de code propre et modulaire sous Flutter.
 
-## Architecture
+*   **Pattern BLoC** : Gestion d'état rigoureuse séparant la logique métier de l'interface (`CameraBloc`, `FilterBloc`, `GalleryBloc`).
+*   **Isolates** : Tout le traitement d'image (application des filtres, rotations, encodage JPG) est déporté dans des threads séparés (Isolates) pour garantir une UI fluide à 60fps, même lors de calculs lourds.
+*   **Repository Pattern** : Abstraction des dépendances externes (Caméra, Capteurs, Stockage) pour faciliter les tests.
+*   **Tests Unitaires & Widget** : Couverture de test robuste (voir dossier `test/`).
 
-L'application utilise l'architecture **BLoC Pattern** avec :
-- **CameraBloc** : Gestion du flux vidéo et des inversions
-- **FilterBloc** : Sélection et application des filtres
-- **GalleryBloc** : Stockage et développement des photos
-- **Services** : Traitement d'image et base de données SQLite
+### Dépendances Principales
+*   `flutter_bloc`: Gestion d'état.
+*   `camera`: Accès bas niveau au matériel photo.
+*   `image`: Manipulation de pixels (pixel-perfect processing).
+*   `sqflite`: Base de données locale pour les métadonnées de la galerie.
+*   `sensors_plus`: Accès à l'accéléromètre.
 
-## Permissions
+---
 
-L'application nécessite les permissions suivantes :
-- **Caméra** : Pour la capture photo
-- **Stockage** : Pour sauvegarder les photos
-- **Capteurs** : Pour détecter le mouvement
+## 🚀 Installation & Démarrage
 
-## Structure du Projet
+1.  **Prérequis** : Flutter SDK installé et un appareil physique (recommandé pour la caméra) ou un émulateur.
+2.  **Cloner le projet** :
+    ```bash
+    git clone https://github.com/votre-user/obscura_sim.git
+    cd obscura_sim
+    ```
+3.  **Installer les paquets** :
+    ```bash
+    flutter pub get
+    ```
+4.  **Lancer l'application** :
+    ```bash
+    flutter run
+    ```
+5.  **Lancer les tests** :
+    ```bash
+    flutter test
+    ```
 
-```
-lib/
-├── bloc/               # Business Logic Components
-│   ├── camera/        # Gestion de la caméra
-│   ├── filter/        # Gestion des filtres
-│   └── gallery/       # Gestion de la galerie
-├── models/            # Modèles de données
-├── screens/           # Écrans de l'application
-├── services/          # Services (DB, traitement d'image)
-├── widgets/           # Widgets personnalisés
-└── main.dart         # Point d'entrée
+---
 
-```
+## 🤝 Contribuer
 
-## Technologies Utilisées
+Les contributions sont les bienvenues ! Si vous avez des idées de nouveaux procédés photographiques à simuler ou des améliorations d'interface :
 
-- **Flutter & Dart**
-- **BLoC Pattern** pour la gestion d'état
-- **SQLite** pour le stockage local
-- **camera** pour l'accès à la caméra
-- **image** pour le traitement d'image
-- **sensors_plus** pour l'accéléromètre
+1.  Forkez le projet.
+2.  Créez votre branche (`git checkout -b feature/AmazingFeature`).
+3.  Commitez vos changements (`git commit -m 'Add some AmazingFeature'`).
+4.  Push vers la branche (`git push origin feature/AmazingFeature`).
+5.  Ouvrez une Pull Request.
 
-## Développement
+---
 
-Pour contribuer au projet :
-
-1. Créer une branche feature
-```bash
-git checkout -b feature/ma-fonctionnalite
-```
-
-2. Commiter les changements
-```bash
-git commit -m "Ajout de ma fonctionnalité"
-```
-
-3. Pousser la branche
-```bash
-git push origin feature/ma-fonctionnalite
-```
-
-## Licence
-
-Ce projet est développé à des fins éducatives et expérimentales.
+*Développé avec ❤️ et ☕ pour les amoureux de la photographie argentique.*

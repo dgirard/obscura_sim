@@ -71,6 +71,22 @@ class FilterSelectionScreen extends StatelessWidget {
                   Colors.indigo,
                   selectedFilter == FilterType.glassPlate,
                 ),
+                _buildFilterOption(
+                  context,
+                  FilterType.cyanotype,
+                  'Cyanotype',
+                  Icons.water_drop,
+                  Colors.cyan,
+                  selectedFilter == FilterType.cyanotype,
+                ),
+                _buildFilterOption(
+                  context,
+                  FilterType.daguerreotype,
+                  'Daguerréotype',
+                  Icons.brightness_high,
+                  Colors.amber,
+                  selectedFilter == FilterType.daguerreotype,
+                ),
               ],
             );
           },

@@ -5,225 +5,266 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/gallery/gallery_bloc.dart';
 import '../models/photo.dart';
 
-class PhotoDetailScreen extends StatelessWidget {
-  final Photo photo;
+class PhotoDetailScreen extends StatefulWidget {
+  final List<Photo> photos;
+  final int initialIndex;
 
   const PhotoDetailScreen({
     super.key,
-    required this.photo,
+    required this.photos,
+    required this.initialIndex,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final bool isNegative = photo.status == PhotoStatus.negative;
+  State<PhotoDetailScreen> createState() => _PhotoDetailScreenState();
+}
 
+class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Ensure we don't go out of bounds if list is empty (shouldn't happen if accessed correctly)
+    if (widget.photos.isEmpty) return const SizedBox.shrink();
+    
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Image principale
-          Center(
-            child: Transform(
-              alignment: Alignment.center,
-              transform: isNegative
-                  ? (Matrix4.identity()
-                    ..rotateX(3.14159)
-                    ..rotateY(3.14159))
-                  : Matrix4.identity(),
-              child: RotatedBox(
-                quarterTurns: photo.isPortrait ? 1 : 0,  // Rotation pour les photos portrait
-                child: InteractiveViewer(
-                  minScale: 0.5,
-                  maxScale: 4.0,
-                  child: Image.file(
-                    File(photo.path),
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.black,
-                        child: const Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            color: Colors.white24,
-                            size: 64,
-                          ),
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.photos.length,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        itemBuilder: (context, index) {
+          return _buildPhotoItem(widget.photos[index]);
+        },
+      ),
+    );
+  }
+
+  Widget _buildPhotoItem(Photo photo) {
+    final bool isNegative = photo.status == PhotoStatus.negative;
+
+    return Stack(
+      children: [
+        // Image principale
+        Center(
+          child: Transform(
+            alignment: Alignment.center,
+            transform: isNegative
+                ? (Matrix4.identity()
+                  ..rotateX(3.14159)
+                  ..rotateY(3.14159))
+                : Matrix4.identity(),
+            child: RotatedBox(
+              quarterTurns: photo.isPortrait ? 1 : 0,  // Rotation pour les photos portrait
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.file(
+                  File(photo.path),
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.black,
+                      child: const Center(
+                        child: Icon(
+                          Icons.broken_image,
+                          color: Colors.white24,
+                          size: 64,
                         ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Overlay gradient en haut
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 120,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black87,
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Bouton retour
-          Positioned(
-            top: 40,
-            left: 16,
-            child: IconButton(
-              icon: const Icon(
-                Icons.arrow_back,
-                color: Colors.white70,
-              ),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-
-          // Titre
-          Positioned(
-            top: 50,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Text(
-                isNegative ? 'Négatif' : 'Photo Développée',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w300,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-          ),
-
-          // Informations et actions en bas
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    Colors.black,
-                    Colors.black87,
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Informations de la photo
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (photo.filter != FilterType.none) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white12,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            _getFilterName(photo.filter),
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                      ],
-                      if (photo.motionBlur != null && photo.motionBlur! > 0.5)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(
-                                Icons.blur_on,
-                                size: 14,
-                                color: Colors.orange,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Flou de mouvement',
-                                style: TextStyle(
-                                  color: Colors.orange,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Boutons d'action
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Bouton Supprimer
-                      _buildActionButton(
-                        icon: Icons.delete_outline,
-                        label: 'Supprimer',
-                        color: Colors.red,
-                        onTap: () => _showDeleteConfirmation(context),
                       ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
 
-                      // Bouton Développer (seulement pour les négatifs)
-                      if (isNegative)
-                        _buildActionButton(
-                          icon: Icons.developer_mode,
-                          label: 'Développer',
-                          color: Colors.amber,
-                          isPrimary: true,
-                          onTap: () => _developPhoto(context),
-                        ),
-
-                      // Bouton Partager (seulement pour les photos développées)
-                      if (!isNegative)
-                        _buildActionButton(
-                          icon: Icons.share_outlined,
-                          label: 'Partager',
-                          color: Colors.blue,
-                          onTap: () => _sharePhoto(context),
-                        ),
-                    ],
-                  ),
+        // Overlay gradient en haut
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 120,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black87,
+                  Colors.transparent,
                 ],
               ),
             ),
           ),
-        ],
-      ),
+        ),
+
+        // Bouton retour
+        Positioned(
+          top: 40,
+          left: 16,
+          child: IconButton(
+            icon: const Icon(
+              Icons.arrow_back,
+              color: Colors.white70,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+
+        // Titre
+        Positioned(
+          top: 50,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Text(
+              isNegative ? 'Négatif' : 'Photo Développée',
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+                fontWeight: FontWeight.w300,
+                letterSpacing: 1.2,
+              ),
+            ),
+          ),
+        ),
+
+        // Informations et actions en bas
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Colors.black,
+                  Colors.black87,
+                  Colors.transparent,
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Informations de la photo
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (photo.filter != FilterType.none) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white12,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          _getFilterName(photo.filter),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    if (photo.motionBlur != null && photo.motionBlur! > 0.5)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(
+                              Icons.blur_on,
+                              size: 14,
+                              color: Colors.orange,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Flou de mouvement',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // Boutons d'action
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Bouton Supprimer
+                    _buildActionButton(
+                      icon: Icons.delete_outline,
+                      label: 'Supprimer',
+                      color: Colors.red,
+                      onTap: () => _showDeleteConfirmation(context, photo),
+                    ),
+
+                    // Bouton Développer (seulement pour les négatifs)
+                    if (isNegative)
+                      _buildActionButton(
+                        icon: Icons.developer_mode,
+                        label: 'Développer',
+                        color: Colors.amber,
+                        isPrimary: true,
+                        onTap: () => _developPhoto(context, photo),
+                      ),
+
+                    // Bouton Partager (seulement pour les photos développées)
+                    if (!isNegative)
+                      _buildActionButton(
+                        icon: Icons.share_outlined,
+                        label: 'Partager',
+                        color: Colors.blue,
+                        onTap: () => _sharePhoto(context, photo),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -275,7 +316,7 @@ class PhotoDetailScreen extends StatelessWidget {
     );
   }
 
-  void _developPhoto(BuildContext context) {
+  void _developPhoto(BuildContext context, Photo photo) {
     showDialog(
       context: context,
       barrierColor: Colors.black87,
@@ -308,7 +349,7 @@ class PhotoDetailScreen extends StatelessWidget {
             onPressed: () {
               context.read<GalleryBloc>().add(DevelopPhoto(photo));
               Navigator.pop(dialogContext);
-              Navigator.pop(context);
+              Navigator.pop(context); // Pop detail screen as the photo status changed
 
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -331,7 +372,7 @@ class PhotoDetailScreen extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context) {
+  void _showDeleteConfirmation(BuildContext context, Photo photo) {
     showDialog(
       context: context,
       barrierColor: Colors.black87,
@@ -363,7 +404,7 @@ class PhotoDetailScreen extends StatelessWidget {
             onPressed: () {
               context.read<GalleryBloc>().add(DeletePhoto(photo));
               Navigator.pop(dialogContext);
-              Navigator.pop(context);
+              Navigator.pop(context); // Pop detail screen on delete
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -378,7 +419,7 @@ class PhotoDetailScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _sharePhoto(BuildContext context) async {
+  Future<void> _sharePhoto(BuildContext context, Photo photo) async {
     const platform = MethodChannel('com.obscurasim.app/mediastore');
 
     try {
@@ -438,6 +479,10 @@ class PhotoDetailScreen extends StatelessWidget {
         return 'Sépia';
       case FilterType.glassPlate:
         return 'Plaque de Verre';
+      case FilterType.cyanotype:
+        return 'Cyanotype';
+      case FilterType.daguerreotype:
+        return 'Daguerréotype';
       default:
         return '';
     }

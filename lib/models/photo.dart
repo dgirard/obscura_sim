@@ -6,6 +6,8 @@ enum FilterType {
   monochrome,
   sepia,
   glassPlate,
+  cyanotype,
+  daguerreotype,
 }
 
 enum PhotoStatus {

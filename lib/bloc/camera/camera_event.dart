@@ -11,7 +11,23 @@ class InitializeCamera extends CameraEvent {}
 
 class DisposeCamera extends CameraEvent {}
 
-class StartCapture extends CameraEvent {}
+class StartCapture extends CameraEvent {
+  final bool isPortrait;
+
+  const StartCapture({required this.isPortrait});
+
+  @override
+  List<Object?> get props => [isPortrait];
+}
+
+class InstantCapture extends CameraEvent {
+  final bool isPortrait;
+
+  const InstantCapture({required this.isPortrait});
+
+  @override
+  List<Object?> get props => [isPortrait];
+}
 
 class StopCapture extends CameraEvent {}
 

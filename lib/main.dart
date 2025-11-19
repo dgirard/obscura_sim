@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'bloc/camera/camera_bloc.dart';
 import 'bloc/filter/filter_bloc.dart';
 import 'bloc/gallery/gallery_bloc.dart';
+import 'repositories/camera_repository.dart';
 import 'screens/viewfinder_screen.dart';
 import 'screens/simple_viewfinder_screen.dart';
 import 'services/database_service.dart';
@@ -39,10 +41,16 @@ class ObscuraSimApp extends StatelessWidget {
       providers: [
         RepositoryProvider(create: (context) => DatabaseService()),
         RepositoryProvider(create: (context) => ImageProcessingService()),
+        RepositoryProvider<CameraRepository>(create: (context) => CameraRepositoryImpl()),
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (context) => CameraBloc()),
+          BlocProvider(
+            create: (context) => CameraBloc(
+              imageProcessingService: context.read<ImageProcessingService>(),
+              cameraRepository: context.read<CameraRepository>(),
+            ),
+          ),
           BlocProvider(create: (context) => FilterBloc()),
           BlocProvider(
             create: (context) => GalleryBloc(
@@ -101,6 +109,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
@@ -130,7 +139,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     // Navigation vers l'écran principal après l'animation
-    Future.delayed(const Duration(seconds: 3), () {
+    _navigationTimer = Timer(const Duration(seconds: 3), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -154,6 +163,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void dispose() {
     _controller.dispose();
+    _navigationTimer?.cancel();
     super.dispose();
   }
 
