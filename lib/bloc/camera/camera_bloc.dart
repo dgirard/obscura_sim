@@ -44,7 +44,26 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     on<UpdateMotionLevel>(_onUpdateMotionLevel);
     on<SetFocusPoint>(_onSetFocusPoint);
     on<SetExposureOffset>(_onSetExposureOffset);
+    on<SetZoomLevel>(_onSetZoomLevel);
     on<ToggleFlash>(_onToggleFlash);
+    on<UpdateCaptureProgress>(_onUpdateCaptureProgress);
+    on<FinishCapture>(_onFinishCapture);
+  }
+
+  Future<void> _onSetZoomLevel(
+    SetZoomLevel event,
+    Emitter<CameraState> emit,
+  ) async {
+    if (_controller == null || !_controller!.value.isInitialized) return;
+    if (state is! CameraReady) return;
+
+    try {
+      // Optimistic update
+      emit((state as CameraReady).copyWith(currentZoom: event.zoom));
+      await _controller!.setZoomLevel(event.zoom);
+    } catch (e) {
+      print('Erreur zoom: $e');
+    }
   }
 
   Future<void> _onSetFocusPoint(
@@ -84,13 +103,50 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
         orElse: () => _cameras!.first,
       );
 
-      _controller = _cameraRepository.createController(
-        camera,
-        _settingsRepository.imageQuality,
-        enableAudio: false,
-      );
+      // Tenter d'initialiser avec plusieurs résolutions en cas d'échec
+      // (Fix pour le bug "No supported surface combination" sur certains appareils)
+      ResolutionPreset preset = _settingsRepository.imageQuality;
+      final List<ResolutionPreset> presetsToTry = [
+        preset,
+        ResolutionPreset.high,
+        ResolutionPreset.medium,
+        ResolutionPreset.low,
+      ];
+      // Remove duplicates
+      final uniquePresets = presetsToTry.toSet().toList();
 
-      await _controller!.initialize();
+      bool initialized = false;
+      String lastError = '';
+
+      for (final p in uniquePresets) {
+        try {
+          // Dispose old controller if exists (though unlikely in this flow unless retrying)
+          if (_controller != null) {
+             // Note: dispose is async but we might just overwrite it if it failed to init. 
+             // If init failed, usually it's not fully initialized.
+             // But safe to just create new one.
+          }
+
+          _controller = _cameraRepository.createController(
+            camera,
+            p,
+            enableAudio: false,
+          );
+
+          await _controller!.initialize();
+          initialized = true;
+          print('Camera initialized with preset: $p');
+          break; // Success!
+        } catch (e) {
+          print('Failed to initialize with preset $p: $e');
+          lastError = e.toString();
+          // Continue to next preset
+        }
+      }
+
+      if (!initialized) {
+        throw Exception('Impossible d\'initialiser la caméra: $lastError');
+      }
 
       // Activer l'autofocus par défaut
       try {
@@ -108,8 +164,25 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
       }
 
       // Récupérer les bornes d'exposition
-      final minExposure = await _controller!.getMinExposureOffset();
-      final maxExposure = await _controller!.getMaxExposureOffset();
+      double minExposure = -1.0;
+      double maxExposure = 1.0;
+      try {
+        minExposure = await _controller!.getMinExposureOffset();
+        maxExposure = await _controller!.getMaxExposureOffset();
+      } catch (e) {
+        // Certains appareils ne supportent pas les contrôles d'exposition
+        print('Exposition non supportée: $e');
+      }
+
+      // Récupérer les bornes de zoom
+      double minZoom = 1.0;
+      double maxZoom = 1.0;
+      try {
+        minZoom = await _controller!.getMinZoomLevel();
+        maxZoom = await _controller!.getMaxZoomLevel();
+      } catch (e) {
+        print('Zoom non supporté: $e');
+      }
 
       emit(CameraReady(
         _controller!,
@@ -117,6 +190,9 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
         maxExposure: maxExposure,
         currentExposure: 0.0,
         flashMode: FlashMode.off,
+        minZoom: minZoom,
+        maxZoom: maxZoom,
+        currentZoom: minZoom,
       ));
     } catch (e) {
       emit(CameraError('Erreur d\'initialisation: ${e.toString()}'));
@@ -168,9 +244,11 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     if (_controller == null || !_controller!.value.isInitialized) return;
     if (state is! CameraReady) return;
 
+    // Mise à jour optimiste de l'UI pour la fluidité du slider
+    emit((state as CameraReady).copyWith(currentExposure: event.offset));
+
     try {
       await _controller!.setExposureOffset(event.offset);
-      emit((state as CameraReady).copyWith(currentExposure: event.offset));
     } catch (e) {
       print('Erreur exposition: $e');
     }
@@ -196,27 +274,53 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
       add(UpdateMotionLevel(motion));
     });
 
+    // Emit initial capturing state for long press
+    emit(CameraCapturing(
+      controller: _controller!,
+      progress: 0.0,
+      motionLevel: 0.0,
+      isInstant: false,
+    ));
+
     // Timer de 3 secondes pour l'exposition
-    const duration = Duration(seconds: 3);
     const updateInterval = Duration(milliseconds: 100);
     int elapsedMs = 0;
 
-    _captureTimer = Timer.periodic(updateInterval, (timer) async {
+    _captureTimer?.cancel();
+    _captureTimer = Timer.periodic(updateInterval, (timer) {
       elapsedMs += updateInterval.inMilliseconds;
-      _elapsedSeconds = elapsedMs / 1000.0;
-      _captureProgress = elapsedMs / duration.inMilliseconds;
-
-      if (_captureProgress >= 1.0) {
-        timer.cancel();
-        await _capturePhoto(emit, isPortrait: event.isPortrait, motionBlur: _totalMotion / 3);
-      } else {
-        emit(CameraCapturing(
-          controller: _controller!,
-          progress: _captureProgress,
-          motionLevel: _totalMotion / (elapsedMs / 1000),
-        ));
-      }
+      final elapsedSeconds = elapsedMs / 1000.0;
+      final progress = elapsedMs / 3000.0; // 3 seconds duration
+      
+      add(UpdateCaptureProgress(progress, elapsedSeconds));
     });
+  }
+
+  Future<void> _onUpdateCaptureProgress(
+    UpdateCaptureProgress event,
+    Emitter<CameraState> emit,
+  ) async {
+    _elapsedSeconds = event.motionLevel; // hacking reused param name for elapsedSeconds
+    _captureProgress = event.progress;
+    
+    if (_captureProgress >= 1.0) {
+      _captureTimer?.cancel();
+      add(FinishCapture());
+    } else {
+      emit(CameraCapturing(
+        controller: _controller!,
+        progress: _captureProgress,
+        motionLevel: _elapsedSeconds > 0 ? (_totalMotion / _elapsedSeconds) : 0,
+        isInstant: false,
+      ));
+    }
+  }
+
+  Future<void> _onFinishCapture(
+    FinishCapture event,
+    Emitter<CameraState> emit,
+  ) async {
+     await _capturePhoto(emit, isPortrait: _isPortrait, motionBlur: _totalMotion / 3);
   }
 
   Future<void> _onInstantCapture(
@@ -226,6 +330,14 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     if (_controller == null || !_controller!.value.isInitialized) {
       return;
     }
+    // Feedback immédiat
+    emit(CameraCapturing(
+      controller: _controller!,
+      progress: 0.0,
+      motionLevel: 0.0,
+      isInstant: true,
+    ));
+    
     await _capturePhoto(emit, isPortrait: event.isPortrait, motionBlur: 0);
   }
 
@@ -234,19 +346,27 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     required bool isPortrait,
     required double motionBlur,
   }) async {
+    final start = DateTime.now().millisecondsSinceEpoch;
+    print('LOG_PERF: _capturePhoto started at $start');
+
     try {
-      await _audioService.playShutter();
+      // Jouer le son sans attendre (fire-and-forget) pour ne pas bloquer la capture
+      _audioService.playShutter().ignore();
+      
+      print('LOG_PERF: calling takePicture at ${DateTime.now().millisecondsSinceEpoch}');
       final XFile photo = await _controller!.takePicture();
+      print('LOG_PERF: takePicture done at ${DateTime.now().millisecondsSinceEpoch}');
 
       // Sauvegarder temporairement
       final Directory appDir = await _cameraRepository.getDocumentsDirectory();
       final String fileName = 'obscura_temp_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final String savedPath = '${appDir.path}/$fileName';
+      
+      print('LOG_PERF: saving to $savedPath at ${DateTime.now().millisecondsSinceEpoch}');
       await photo.saveTo(savedPath);
+      print('LOG_PERF: saveTo done at ${DateTime.now().millisecondsSinceEpoch}');
 
       // Lancer le traitement en arrière-plan (rotation, etc.)
-      // Note: On ne redimensionne pas ici si ce n'est pas nécessaire, 
-      // mais le service le fera si > 2048px.
       final processingFuture = _imageProcessingService.processImage(
         savedPath,
         FilterType.none,
@@ -258,19 +378,10 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
       double progress = 0.0;
       final completer = Completer<void>();
       
-      // Réutiliser le stream accéléromètre ou en créer un nouveau
-      _accelerometerSubscription?.cancel();
-      _accelerometerSubscription = _cameraRepository.accelerometerEvents.listen((event) {
-        double motion = (event.x.abs() + event.y.abs() + event.z.abs()) / 3;
-        // Agiter le téléphone accélère le développement
-        if (motion > 2.0) {
-           progress += 0.05; // Bonus
-        }
-      });
-
-      // Timer pour la progression naturelle + émission d'état
+      print('LOG_PERF: Emitting CameraDeveloping at ${DateTime.now().millisecondsSinceEpoch}');
+      
       final timer = Timer.periodic(const Duration(milliseconds: 100), (t) {
-        progress += 0.02; // 2% par 100ms = 5 secondes total sans secouer
+        progress += 0.1; // 1 second duration (fast development)
         
         if (progress >= 1.0) {
            t.cancel();
@@ -289,23 +400,26 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
         }
       });
 
+      print('LOG_PERF: Waiting for development simulation at ${DateTime.now().millisecondsSinceEpoch}');
       await completer.future;
-      timer.cancel(); // Sécurité
-      _accelerometerSubscription?.cancel();
+      print('LOG_PERF: Simulation finished at ${DateTime.now().millisecondsSinceEpoch}');
+      timer.cancel();
 
-      // Attendre la fin réelle du traitement
+      print('LOG_PERF: Waiting for image processing at ${DateTime.now().millisecondsSinceEpoch}');
       final processedPath = await processingFuture;
+      print('LOG_PERF: Image processing finished at ${DateTime.now().millisecondsSinceEpoch}');
       
-      await _audioService.playDeveloping();
+      // Suppression de la lecture du son de développement selon la demande de l'utilisateur
+      // _audioService.playDeveloping().ignore();
 
       if (!emit.isDone) {
+        print('LOG_PERF: Emitting CameraCaptured at ${DateTime.now().millisecondsSinceEpoch}');
         emit(CameraCaptured(
           imagePath: processedPath,
           totalMotion: motionBlur,
         ));
       }
 
-      // Retour à l'état prêt
       await Future.delayed(const Duration(seconds: 1));
       if (!emit.isDone) {
          emit(CameraReady(_controller!));
@@ -327,8 +441,7 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     _accelerometerSubscription?.cancel();
 
     if (!event.abort && wasCapturing) {
-      // Relâché avant 3s mais pas annulé -> Prendre la photo
-      // Calculer le flou moyen sur le temps écoulé
+      // Relâché avant 3s mais pas annulé -> Prendre la photo (Early release)
       final double averageMotion = _elapsedSeconds > 0 ? (_totalMotion / _elapsedSeconds) : 0;
       
       await _capturePhoto(
@@ -337,10 +450,8 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
         motionBlur: averageMotion
       );
     } else {
-      // Annulation ou fin normale gérée ailleurs (si timer fini)
-      // Si le timer est fini, _capturePhoto a déjà été appelé, donc on est bon.
-      // Si c'est un abort explicit, on reset.
-      if (emit.isDone) return; // Si capturePhoto a déjà emit
+      // Annulation ou fin normale gérée via FinishCapture
+      if (emit.isDone) return; 
       
       if (_controller != null) {
         emit(CameraReady(_controller!));

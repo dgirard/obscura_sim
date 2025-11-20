@@ -19,7 +19,7 @@ class SettingsRepository {
   ResolutionPreset get imageQuality {
     final String? value = _prefs.getString(_keyImageQuality);
     if (value == 'medium') return ResolutionPreset.medium;
-    return ResolutionPreset.high; // Default
+    return ResolutionPreset.high; // Default to high
   }
 
   Future<void> setImageQuality(ResolutionPreset preset) async {

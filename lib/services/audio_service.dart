@@ -1,29 +1,31 @@
 import 'package:audioplayers/audioplayers.dart';
 
 class AudioService {
-  final AudioPlayer _player = AudioPlayer();
+  // On crée une nouvelle instance pour chaque son pour éviter les conflits d'état
+  // et permettre la superposition des sons si nécessaire.
 
   Future<void> playShutter() async {
     try {
-      // Ensure the mode is correct for playback
-      await _player.setReleaseMode(ReleaseMode.stop);
-      await _player.play(AssetSource('sounds/shutter.mp3'));
+      final player = AudioPlayer();
+      // ReleaseMode.release dispose le player une fois fini
+      await player.setReleaseMode(ReleaseMode.release);
+      await player.play(AssetSource('sounds/shutter.mp3'));
     } catch (e) {
-      // Silent failure if asset missing or audio issue
-      print('Audio error: $e');
+      print('Audio error (shutter): $e');
     }
   }
 
   Future<void> playDeveloping() async {
     try {
-      await _player.setReleaseMode(ReleaseMode.stop);
-      await _player.play(AssetSource('sounds/developing.mp3'));
+      final player = AudioPlayer();
+      await player.setReleaseMode(ReleaseMode.release);
+      await player.play(AssetSource('sounds/developing.mp3'));
     } catch (e) {
-      print('Audio error: $e');
+      print('Audio error (developing): $e');
     }
   }
   
   void dispose() {
-    _player.dispose();
+    // Rien à disposer globalement
   }
 }

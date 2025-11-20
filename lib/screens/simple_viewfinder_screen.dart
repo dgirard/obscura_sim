@@ -187,7 +187,22 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                     // Capture Overlay
                     if (state is CameraCapturing)
                       Positioned.fill(
-                        child: Container(color: Colors.black.withOpacity(0.3)),
+                        child: Container(
+                          color: state.isInstant ? Colors.black : Colors.black.withOpacity(0.3),
+                          child: state.isInstant
+                              ? const Center(
+                                  child: Text(
+                                    'Capture...',
+                                    style: TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w300,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
                       ),
                       
                     // Developing Overlay
@@ -230,6 +245,40 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                               ),
                             ),
                           ),
+                        ),
+                      ),
+
+                    // Zoom Slider (Horizontal)
+                    if (state is CameraReady && state.maxZoom > state.minZoom)
+                      Positioned(
+                        left: 50,
+                        right: 50,
+                        bottom: 120,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.zoom_out, color: Colors.white54, size: 20),
+                            Expanded(
+                              child: SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  activeTrackColor: Colors.white,
+                                  inactiveTrackColor: Colors.white24,
+                                  thumbColor: Colors.white,
+                                  trackHeight: 2.0,
+                                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
+                                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 16.0),
+                                ),
+                                child: Slider(
+                                  value: state.currentZoom,
+                                  min: state.minZoom,
+                                  max: state.maxZoom,
+                                  onChanged: (value) {
+                                    context.read<CameraBloc>().add(SetZoomLevel(value));
+                                  },
+                                ),
+                              ),
+                            ),
+                            const Icon(Icons.zoom_in, color: Colors.white54, size: 20),
+                          ],
                         ),
                       ),
 
@@ -410,6 +459,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
           GestureDetector(
             onTap: () {
               if (!isCapturing) {
+                print('LOG_PERF: Button tapped at ${DateTime.now().millisecondsSinceEpoch}');
                 context.read<CameraBloc>().add(
                   InstantCapture(isPortrait: isPortrait)
                 );
@@ -417,6 +467,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
             },
             onLongPressStart: (_) {
               if (!isCapturing) {
+                print('LOG_PERF: Long press start at ${DateTime.now().millisecondsSinceEpoch}');
                 context.read<CameraBloc>().add(
                   StartCapture(isPortrait: isPortrait)
                 );
@@ -499,45 +550,29 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
       fit: StackFit.expand,
       children: [
         Container(color: Colors.black),
+        // Text indicator to show immediate feedback while image loads/fades
+        const Center(
+          child: Text(
+            'Développement...',
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 16,
+              fontWeight: FontWeight.w300,
+              letterSpacing: 2,
+            ),
+          ),
+        ),
         Center(
           child: Opacity(
             opacity: state.progress,
             child: Image.file(
               File(state.tempImagePath),
               fit: BoxFit.contain,
+              gaplessPlayback: true, // Prevent flickering
               errorBuilder: (_, __, ___) => const SizedBox(),
             ),
           ),
         ),
-        if (state.progress < 0.9)
-          Positioned(
-            bottom: 100,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.vibration, color: Colors.black, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Secouez pour développer !',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }

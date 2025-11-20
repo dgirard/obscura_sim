@@ -16,6 +16,9 @@ class CameraReady extends CameraState {
   final double maxExposure;
   final double currentExposure;
   final FlashMode flashMode;
+  final double minZoom;
+  final double maxZoom;
+  final double currentZoom;
 
   const CameraReady(
     this.controller, {
@@ -23,10 +26,22 @@ class CameraReady extends CameraState {
     this.maxExposure = 0.0,
     this.currentExposure = 0.0,
     this.flashMode = FlashMode.off,
+    this.minZoom = 1.0,
+    this.maxZoom = 1.0,
+    this.currentZoom = 1.0,
   });
 
   @override
-  List<Object?> get props => [controller, minExposure, maxExposure, currentExposure, flashMode];
+  List<Object?> get props => [
+    controller, 
+    minExposure, 
+    maxExposure, 
+    currentExposure, 
+    flashMode,
+    minZoom,
+    maxZoom,
+    currentZoom,
+  ];
 
   CameraReady copyWith({
     CameraController? controller,
@@ -34,6 +49,9 @@ class CameraReady extends CameraState {
     double? maxExposure,
     double? currentExposure,
     FlashMode? flashMode,
+    double? minZoom,
+    double? maxZoom,
+    double? currentZoom,
   }) {
     return CameraReady(
       controller ?? this.controller,
@@ -41,6 +59,9 @@ class CameraReady extends CameraState {
       maxExposure: maxExposure ?? this.maxExposure,
       currentExposure: currentExposure ?? this.currentExposure,
       flashMode: flashMode ?? this.flashMode,
+      minZoom: minZoom ?? this.minZoom,
+      maxZoom: maxZoom ?? this.maxZoom,
+      currentZoom: currentZoom ?? this.currentZoom,
     );
   }
 }
@@ -49,15 +70,17 @@ class CameraCapturing extends CameraState {
   final CameraController controller;
   final double progress;  // 0.0 to 1.0
   final double motionLevel;  // Niveau de mouvement détecté
+  final bool isInstant;
 
   const CameraCapturing({
     required this.controller,
     required this.progress,
     required this.motionLevel,
+    this.isInstant = false,
   });
 
   @override
-  List<Object?> get props => [controller, progress, motionLevel];
+  List<Object?> get props => [controller, progress, motionLevel, isInstant];
 }
 
 class CameraDeveloping extends CameraState {

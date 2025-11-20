@@ -26,6 +26,15 @@ class SetExposureOffset extends CameraEvent {
   List<Object?> get props => [offset];
 }
 
+class SetZoomLevel extends CameraEvent {
+  final double zoom;
+
+  const SetZoomLevel(this.zoom);
+
+  @override
+  List<Object?> get props => [zoom];
+}
+
 class ToggleFlash extends CameraEvent {}
 
 class UpdateDevelopingProgress extends CameraEvent {
@@ -48,6 +57,16 @@ class StartCapture extends CameraEvent {
   @override
   List<Object?> get props => [isPortrait];
 }
+
+class UpdateCaptureProgress extends CameraEvent {
+  final double progress;
+  final double motionLevel;
+  const UpdateCaptureProgress(this.progress, this.motionLevel);
+  @override
+  List<Object> get props => [progress, motionLevel];
+}
+
+class FinishCapture extends CameraEvent {}
 
 class InstantCapture extends CameraEvent {
   final bool isPortrait;

@@ -105,20 +105,7 @@ class MainActivity : FlutterActivity() {
                 contentResolver.update(imageUri, contentValues, null, null)
             }
 
-            // Query to get the actual file path
-            val projection = arrayOf(MediaStore.Images.Media.DATA)
-            contentResolver.query(imageUri, projection, null, null, null)?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-                    val realPath = cursor.getString(columnIndex)
-                    if (realPath != null) {
-                        // Return a URI that includes the file path for easier access
-                        return android.net.Uri.parse("file://$realPath")
-                    }
-                }
-            }
-
-            // If we can't get the path, return the content URI
+            // Return the content URI directly for sharing
             return imageUri
         } catch (e: Exception) {
             // Clean up on error

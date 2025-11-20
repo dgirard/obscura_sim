@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bloc/camera/camera_bloc.dart';
@@ -80,7 +79,6 @@ class ObscuraSimApp extends StatelessWidget {
             brightness: Brightness.dark,
             primaryColor: Colors.black,
             scaffoldBackgroundColor: Colors.black,
-            fontFamily: GoogleFonts.sourceCodePro().fontFamily,
             appBarTheme: const AppBarTheme(
               backgroundColor: Colors.black,
               elevation: 0,
@@ -218,9 +216,9 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                     const SizedBox(height: 30),
-                    Text(
+                    const Text(
                       'OBSCURASIM',
-                      style: GoogleFonts.sourceCodePro(
+                      style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w200,
                         letterSpacing: 6,
@@ -228,9 +226,9 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Text(
+                    const Text(
                       'Camera Obscura',
-                      style: GoogleFonts.sourceCodePro(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w300,
                         letterSpacing: 2,
