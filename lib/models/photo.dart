@@ -1,60 +1,44 @@
-import 'dart:typed_data';
 import 'package:equatable/equatable.dart';
 
-enum FilterType {
-  none,
-  monochrome,
-  sepia,
-  glassPlate,
-  cyanotype,
-  daguerreotype,
-}
-
-enum PhotoStatus {
-  negative,  // Photo inversée, non développée
-  developed, // Photo développée, prête à l'export
-}
+enum FilterType { none, monochrome, sepia, glassPlate, cyanotype, daguerreotype }
+enum PhotoStatus { negative, developed }
 
 class Photo extends Equatable {
-  final String id;
+  final int? id;
   final String path;
-  final DateTime capturedAt;
   final FilterType filter;
+  final double? motionBlur;
+  final bool isPortrait;
   final PhotoStatus status;
-  final double? motionBlur;  // Niveau de flou de mouvement détecté
-  final Uint8List? thumbnailData;
-  final bool isPortrait;  // Indique si la photo a été prise en mode portrait
+  final DateTime timestamp;
 
-  const Photo({
-    required this.id,
+  Photo({
+    this.id,
     required this.path,
-    required this.capturedAt,
-    required this.filter,
-    required this.status,
+    this.filter = FilterType.none,
     this.motionBlur,
-    this.thumbnailData,
     this.isPortrait = false,
-  });
+    this.status = PhotoStatus.negative,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
 
   Photo copyWith({
-    String? id,
+    int? id,
     String? path,
-    DateTime? capturedAt,
     FilterType? filter,
-    PhotoStatus? status,
     double? motionBlur,
-    Uint8List? thumbnailData,
     bool? isPortrait,
+    PhotoStatus? status,
+    DateTime? timestamp,
   }) {
     return Photo(
       id: id ?? this.id,
       path: path ?? this.path,
-      capturedAt: capturedAt ?? this.capturedAt,
       filter: filter ?? this.filter,
-      status: status ?? this.status,
       motionBlur: motionBlur ?? this.motionBlur,
-      thumbnailData: thumbnailData ?? this.thumbnailData,
       isPortrait: isPortrait ?? this.isPortrait,
+      status: status ?? this.status,
+      timestamp: timestamp ?? this.timestamp,
     );
   }
 
@@ -62,12 +46,11 @@ class Photo extends Equatable {
     return {
       'id': id,
       'path': path,
-      'capturedAt': capturedAt.toIso8601String(),
       'filter': filter.index,
+      'motion_blur': motionBlur,
+      'is_portrait': isPortrait ? 1 : 0,
       'status': status.index,
-      'motionBlur': motionBlur,
-      'thumbnailData': thumbnailData,
-      'isPortrait': isPortrait ? 1 : 0,  // Convertir bool en int pour SQLite
+      'timestamp': timestamp.millisecondsSinceEpoch,
     };
   }
 
@@ -75,15 +58,16 @@ class Photo extends Equatable {
     return Photo(
       id: map['id'],
       path: map['path'],
-      capturedAt: DateTime.parse(map['capturedAt']),
       filter: FilterType.values[map['filter']],
+      motionBlur: map['motion_blur'],
+      isPortrait: map['is_portrait'] == 1,
       status: PhotoStatus.values[map['status']],
-      motionBlur: map['motionBlur'],
-      thumbnailData: map['thumbnailData'],
-      isPortrait: (map['isPortrait'] ?? 0) == 1,  // Convertir int en bool
+      timestamp: map['timestamp'] != null 
+          ? DateTime.fromMillisecondsSinceEpoch(map['timestamp'])
+          : null,
     );
   }
 
   @override
-  List<Object?> get props => [id, path, capturedAt, filter, status, motionBlur, isPortrait];
+  List<Object?> get props => [id, path, filter, motionBlur, isPortrait, status, timestamp];
 }

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:equatable/equatable.dart';
 
 abstract class CameraEvent extends Equatable {
@@ -6,8 +7,36 @@ abstract class CameraEvent extends Equatable {
   @override
   List<Object?> get props => [];
 }
+// ... existing events
+class SetFocusPoint extends CameraEvent {
+  final Offset point;
+
+  const SetFocusPoint(this.point);
+
+  @override
+  List<Object?> get props => [point];
+}
+
+class SetExposureOffset extends CameraEvent {
+  final double offset;
+
+  const SetExposureOffset(this.offset);
+
+  @override
+  List<Object?> get props => [offset];
+}
+
+class ToggleFlash extends CameraEvent {}
+
+class UpdateDevelopingProgress extends CameraEvent {
+  final double progress;
+  const UpdateDevelopingProgress(this.progress);
+  @override
+  List<Object> get props => [progress];
+}
 
 class InitializeCamera extends CameraEvent {}
+// ...
 
 class DisposeCamera extends CameraEvent {}
 
@@ -29,7 +58,14 @@ class InstantCapture extends CameraEvent {
   List<Object?> get props => [isPortrait];
 }
 
-class StopCapture extends CameraEvent {}
+class StopCapture extends CameraEvent {
+  final bool abort;
+
+  const StopCapture({this.abort = false});
+
+  @override
+  List<Object?> get props => [abort];
+}
 
 class UpdateMotionLevel extends CameraEvent {
   final double level;

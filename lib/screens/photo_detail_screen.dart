@@ -2,8 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path/path.dart' as path;
 import '../bloc/gallery/gallery_bloc.dart';
 import '../models/photo.dart';
+import '../services/image_processing_service.dart';
 
 class PhotoDetailScreen extends StatefulWidget {
   final List<Photo> photos;
@@ -420,10 +422,77 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
   }
 
   Future<void> _sharePhoto(BuildContext context, Photo photo) async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A1A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.image, color: Colors.white),
+                title: const Text('Partager l\'original', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _performShare(context, photo.path, photo);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.crop_free, color: Colors.amber),
+                title: const Text('Partager avec cadre (Polaroid)', style: TextStyle(color: Colors.white)),
+                subtitle: const Text('Ajoute la date et le filtre utilisé', style: TextStyle(color: Colors.white54)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _generateAndShareFramed(context, photo);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _generateAndShareFramed(BuildContext context, Photo photo) async {
+    // Show loading
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Génération du cadre...'), duration: Duration(seconds: 1)),
+    );
+
+    try {
+      final dateStr = "${photo.timestamp.day}/${photo.timestamp.month}/${photo.timestamp.year}";
+      final filterName = _getFilterName(photo.filter);
+      final title = "OBSCURA - $dateStr";
+      
+      final processingService = context.read<ImageProcessingService>();
+      final framedPath = await processingService.generateFramedImage(
+        photo.path,
+        title,
+        filterName.isEmpty ? "Sans Filtre" : filterName,
+      );
+
+      if (context.mounted) {
+        _performShare(context, framedPath, photo);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _performShare(BuildContext context, String filePath, Photo photo) async {
     const platform = MethodChannel('com.obscurasim.app/mediastore');
 
     try {
-      final file = File(photo.path);
+      final file = File(filePath);
 
       if (!await file.exists()) {
         if (context.mounted) {
@@ -443,7 +512,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
       final String fileName = 'obscura_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
       final String? contentUri = await platform.invokeMethod('saveToMediaStore', {
-        'filePath': photo.path,
+        'filePath': filePath,
         'displayName': fileName,
       });
 

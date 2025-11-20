@@ -54,6 +54,8 @@ dependencies:
   # UI
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.1
+  shared_preferences: ^2.5.3
+  audioplayers: ^6.5.1
 
 dev_dependencies:
   flutter_test:
@@ -102,6 +104,9 @@ flutter:
   #       - asset: fonts/Schyler-Regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
+  assets:
+    - assets/icon/
+    - assets/sounds/
   #   - family: Trajan Pro
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf

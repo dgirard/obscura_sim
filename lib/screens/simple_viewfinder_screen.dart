@@ -1,15 +1,20 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../bloc/camera/camera_bloc.dart';
 import '../bloc/camera/camera_event.dart';
 import '../bloc/camera/camera_state.dart';
 import '../bloc/filter/filter_bloc.dart';
 import '../bloc/gallery/gallery_bloc.dart';
+import '../bloc/settings/settings_bloc.dart';
 import '../models/photo.dart';
 import 'filter_selection_screen.dart';
 import 'gallery_screen.dart';
+import 'settings_screen.dart';
 
 class SimpleViewfinderScreen extends StatefulWidget {
   const SimpleViewfinderScreen({super.key});
@@ -21,6 +26,8 @@ class SimpleViewfinderScreen extends StatefulWidget {
 class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
     with WidgetsBindingObserver {
   Orientation? _deviceOrientation;
+  Offset? _focusPoint;
+  Timer? _focusTimer;
 
   @override
   void initState() {
@@ -43,8 +50,41 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _focusTimer?.cancel();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
+  }
+
+  void _handleFocusTap(TapUpDetails details, BoxConstraints constraints) {
+    if (context.read<CameraBloc>().state is! CameraReady) return;
+
+    final offset = Offset(
+      details.localPosition.dx / constraints.maxWidth,
+      details.localPosition.dy / constraints.maxHeight,
+    );
+
+    // Inversion des coordonnées si le viseur est inversé
+    final isInverted = context.read<SettingsBloc>().state.isInvertedViewfinder;
+    final sensorPoint = isInverted
+        ? Offset(1.0 - offset.dx, 1.0 - offset.dy)
+        : offset;
+
+    context.read<CameraBloc>().add(SetFocusPoint(sensorPoint));
+
+    // Feedback visuel
+    setState(() {
+      _focusPoint = details.localPosition;
+    });
+
+    // Cacher l'indicateur après 1s
+    _focusTimer?.cancel();
+    _focusTimer = Timer(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          _focusPoint = null;
+        });
+      }
+    });
   }
 
   void _onCaptureSuccess(BuildContext context, CameraCaptured state) {
@@ -104,9 +144,44 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                     // Camera Preview
                     if (state is CameraReady || state is CameraCapturing)
                       _buildCameraPreview(context, state, orientation)
+                    else if (state is CameraPermissionDenied)
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.no_photography, color: Colors.red, size: 64),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Permission caméra requise',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () => openAppSettings(),
+                              child: const Text('Ouvrir les paramètres'),
+                            ),
+                          ],
+                        ),
+                      )
                     else
                       const Center(
                         child: CircularProgressIndicator(color: Colors.white24),
+                      ),
+// ...
+
+                    // Focus Indicator
+                    if (_focusPoint != null)
+                      Positioned(
+                        left: _focusPoint!.dx - 25,
+                        top: _focusPoint!.dy - 25,
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.amber, width: 1.5),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
 
                     // Capture Overlay
@@ -114,6 +189,10 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                       Positioned.fill(
                         child: Container(color: Colors.black.withOpacity(0.3)),
                       ),
+                      
+                    // Developing Overlay
+                    if (state is CameraDeveloping)
+                      _buildDevelopingOverlay(context, state),
 
                     // Motion Indicator
                     if (state is CameraCapturing && state.motionLevel > 1.0)
@@ -121,6 +200,70 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
 
                     // Filter Indicator
                     _buildFilterIndicator(),
+
+                    // Exposure Slider
+                    if (state is CameraReady)
+                      Positioned(
+                        right: 10,
+                        top: 100,
+                        bottom: 150,
+                        child: RotatedBox(
+                          quarterTurns: 3,
+                          child: SizedBox(
+                            height: 40,
+                            child: SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                activeTrackColor: Colors.amber,
+                                inactiveTrackColor: Colors.white24,
+                                thumbColor: Colors.amber,
+                                trackHeight: 2.0,
+                                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
+                                overlayShape: const RoundSliderOverlayShape(overlayRadius: 14.0),
+                              ),
+                              child: Slider(
+                                value: state.currentExposure,
+                                min: state.minExposure,
+                                max: state.maxExposure,
+                                onChanged: (value) {
+                                  context.read<CameraBloc>().add(SetExposureOffset(value));
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    // Flash Button
+                    if (state is CameraReady)
+                      Positioned(
+                        top: 50,
+                        left: 20,
+                        child: IconButton(
+                          onPressed: () => context.read<CameraBloc>().add(ToggleFlash()),
+                          icon: Icon(
+                            _getFlashIcon(state.flashMode),
+                            color: state.flashMode == FlashMode.off ? Colors.white38 : Colors.amber,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+
+                    // Settings Button
+                    Positioned(
+                      top: 50,
+                      left: 70,
+                      child: IconButton(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                        ),
+                        icon: const Icon(
+                          Icons.settings,
+                          color: Colors.white38,
+                          size: 28,
+                        ),
+                      ),
+                    ),
 
                     // Controls
                     _buildControls(context, state, orientation),
@@ -144,15 +287,29 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
     }
 
     return Center(
-      child: Transform(
-        alignment: Alignment.center,
-        transform: Matrix4.identity()..rotateZ(3.14159), // 180° rotation
-        child: AspectRatio(
-          aspectRatio: orientation == Orientation.portrait
-              ? 1 / controller.value.aspectRatio
-              : controller.value.aspectRatio,
-          child: CameraPreview(controller),
-        ),
+      child: BlocBuilder<SettingsBloc, SettingsState>(
+        builder: (context, settingsState) {
+          return Transform(
+            alignment: Alignment.center,
+            transform: settingsState.isInvertedViewfinder
+                ? (Matrix4.identity()..rotateZ(3.14159)) // 180° rotation
+                : Matrix4.identity(),
+            child: AspectRatio(
+              aspectRatio: orientation == Orientation.portrait
+                  ? 1 / controller!.value.aspectRatio
+                  : controller!.value.aspectRatio,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return GestureDetector(
+                    onTapUp: (details) => _handleFocusTap(details, constraints),
+                    behavior: HitTestBehavior.opaque,
+                    child: CameraPreview(controller!),
+                  );
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -265,8 +422,8 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                 );
               }
             },
-            onLongPressEnd: (_) => context.read<CameraBloc>().add(StopCapture()),
-            onLongPressCancel: () => context.read<CameraBloc>().add(StopCapture()),
+            onLongPressEnd: (_) => context.read<CameraBloc>().add(const StopCapture(abort: false)),
+            onLongPressCancel: () => context.read<CameraBloc>().add(const StopCapture(abort: true)),
             child: Container(
               width: 80,
               height: 80,
@@ -321,6 +478,67 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
       top: isPortrait ? null : 0,
       bottom: 0,
       child: SafeArea(child: controls),
+    );
+  }
+
+  IconData _getFlashIcon(FlashMode mode) {
+    switch (mode) {
+      case FlashMode.off:
+        return Icons.flash_off;
+      case FlashMode.auto:
+        return Icons.flash_auto;
+      case FlashMode.torch:
+        return Icons.highlight;
+      case FlashMode.always:
+        return Icons.flash_on;
+    }
+  }
+
+  Widget _buildDevelopingOverlay(BuildContext context, CameraDeveloping state) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(color: Colors.black),
+        Center(
+          child: Opacity(
+            opacity: state.progress,
+            child: Image.file(
+              File(state.tempImagePath),
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => const SizedBox(),
+            ),
+          ),
+        ),
+        if (state.progress < 0.9)
+          Positioned(
+            bottom: 100,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.vibration, color: Colors.black, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Secouez pour développer !',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 

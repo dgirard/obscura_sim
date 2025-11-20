@@ -140,13 +140,12 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
       final thumbnail = await _imageService.createThumbnail(processedPath);
 
       final photo = Photo(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        id: DateTime.now().millisecondsSinceEpoch,
         path: processedPath,
-        capturedAt: DateTime.now(),
+        timestamp: DateTime.now(),
         filter: event.filter,
         status: PhotoStatus.negative,
         motionBlur: event.motionBlur,
-        thumbnailData: thumbnail,
         isPortrait: event.isPortrait,
       );
 
@@ -217,7 +216,9 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
         }
       }
 
-      await _databaseService.deletePhoto(event.photo.id);
+      if (event.photo.id != null) {
+        await _databaseService.deletePhoto(event.photo.id!);
+      }
 
       // Supprimer les fichiers
       final File photoFile = File(event.photo.path);

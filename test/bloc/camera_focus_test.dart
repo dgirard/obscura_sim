@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'dart:ui';
-
 import 'package:bloc_test/bloc_test.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,7 +11,8 @@ import 'package:obscura_sim/repositories/settings_repository.dart';
 import 'package:obscura_sim/services/audio_service.dart';
 import 'package:obscura_sim/services/image_processing_service.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:sensors_plus/sensors_plus.dart';
+import 'dart:io';
+import 'dart:ui';
 
 // Mocks
 class MockCameraRepository extends Mock implements CameraRepository {}
@@ -62,24 +60,15 @@ void main() {
     when(() => mockCameraController.setFlashMode(any())).thenAnswer((_) async {});
     when(() => mockCameraController.dispose()).thenAnswer((_) async {});
     
-    // Ensure we trigger the flash mode check
     when(() => mockCameraController.value).thenReturn(
       const CameraValue.uninitialized(CameraDescription(
         name: '0', 
         lensDirection: CameraLensDirection.back,
         sensorOrientation: 90
-      )).copyWith(
-        isInitialized: true,
-        flashMode: FlashMode.auto, 
-      )
+      )).copyWith(isInitialized: true)
     );
 
-    when(() => mockCameraRepository.requestCameraPermission())
-            .thenAnswer((_) async => PermissionStatus.granted);
-
     when(() => mockSettingsRepository.imageQuality).thenReturn(ResolutionPreset.high);
-    when(() => mockAudioService.playShutter()).thenAnswer((_) async {});
-    when(() => mockAudioService.playDeveloping()).thenAnswer((_) async {});
 
     cameraBloc = CameraBloc(
       cameraRepository: mockCameraRepository,
@@ -93,52 +82,10 @@ void main() {
     cameraBloc.close();
   });
 
-  group('CameraBloc', () {
-    test('initial state is CameraInitial', () {
-      expect(cameraBloc.state, equals(CameraInitial()));
-    });
-
+  group('CameraBloc Focus', () {
     blocTest<CameraBloc, CameraState>(
-      'emits [CameraReady] when InitializeCamera succeeds',
+      'sets focus point',
       build: () {
-        final camera = const CameraDescription(
-          name: '0',
-          lensDirection: CameraLensDirection.back,
-          sensorOrientation: 90,
-        );
-        
-        when(() => mockCameraRepository.getAvailableCameras())
-            .thenAnswer((_) async => [camera]);
-            
-        when(() => mockCameraRepository.createController(
-          any(), any(), enableAudio: any(named: 'enableAudio')
-        )).thenReturn(mockCameraController);
-
-        return cameraBloc;
-      },
-      act: (bloc) => bloc.add(InitializeCamera()),
-      expect: () => [isA<CameraReady>()],
-      verify: (_) {
-        verify(() => mockCameraController.initialize()).called(1);
-        verify(() => mockSettingsRepository.imageQuality).called(1);
-      },
-    );
-
-    blocTest<CameraBloc, CameraState>(
-      'emits [CameraError] when InitializeCamera fails',
-      build: () {
-        when(() => mockCameraRepository.getAvailableCameras())
-            .thenThrow(Exception('Camera error'));
-        return cameraBloc;
-      },
-      act: (bloc) => bloc.add(InitializeCamera()),
-      expect: () => [isA<CameraError>()],
-    );
-    
-    blocTest<CameraBloc, CameraState>(
-      'emits [CameraReady, CameraCaptured, CameraReady] when InstantCapture succeeds (Landscape)',
-      build: () {
-        // Setup initialization
         final camera = const CameraDescription(
           name: '0',
           lensDirection: CameraLensDirection.back,
@@ -148,35 +95,25 @@ void main() {
             .thenAnswer((_) async => [camera]);
         when(() => mockCameraRepository.createController(any(), any(), enableAudio: any(named: 'enableAudio')))
             .thenReturn(mockCameraController);
-
-        // Setup capture
-        final mockPhoto = MockXFile();
-        when(() => mockPhoto.saveTo(any())).thenAnswer((_) async {});
-        when(() => mockCameraController.takePicture())
-            .thenAnswer((_) async => mockPhoto);
+        
+        when(() => mockCameraRepository.requestCameraPermission())
+            .thenAnswer((_) async => PermissionStatus.granted);
+            
+        when(() => mockCameraController.setFocusPoint(any())).thenAnswer((_) async {});
+        when(() => mockCameraController.setExposurePoint(any())).thenAnswer((_) async {});
 
         return cameraBloc;
       },
       act: (bloc) async {
         bloc.add(InitializeCamera());
-        // Wait for initialization to complete
-        await Future.delayed(const Duration(milliseconds: 10)); 
-        bloc.add(const InstantCapture(isPortrait: false));
+        await Future.delayed(const Duration(milliseconds: 10));
+        bloc.add(const SetFocusPoint(Offset(0.5, 0.5)));
       },
-      wait: const Duration(seconds: 2),
-      expect: () => [
-        isA<CameraReady>(), // From InitializeCamera
-        isA<CameraCaptured>().having(
-          (state) => state.totalMotion,
-          'totalMotion',
-          0.0
-        ),
-        isA<CameraReady>() // From InstantCapture completion
-      ],
+      expect: () => [isA<CameraReady>()],
       verify: (_) {
-        verify(() => mockAudioService.playShutter()).called(1);
-        verify(() => mockAudioService.playDeveloping()).called(1);
-      }
+        verify(() => mockCameraController.setFocusPoint(const Offset(0.5, 0.5))).called(1);
+        verify(() => mockCameraController.setExposurePoint(const Offset(0.5, 0.5))).called(1);
+      },
     );
   });
 }

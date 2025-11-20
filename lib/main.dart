@@ -3,18 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bloc/camera/camera_bloc.dart';
 import 'bloc/filter/filter_bloc.dart';
 import 'bloc/gallery/gallery_bloc.dart';
+import 'bloc/settings/settings_bloc.dart';
 import 'repositories/camera_repository.dart';
+import 'repositories/settings_repository.dart';
 import 'screens/viewfinder_screen.dart';
 import 'screens/simple_viewfinder_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'services/database_service.dart';
 import 'services/image_processing_service.dart';
+import 'services/audio_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  final prefs = await SharedPreferences.getInstance();
 
   // Ne pas restreindre les orientations - laisser le système gérer automatiquement
   // Cela permet une rotation libre de l'application
@@ -29,11 +36,13 @@ void main() async {
     ),
   );
 
-  runApp(const ObscuraSimApp());
+  runApp(ObscuraSimApp(prefs: prefs));
 }
 
 class ObscuraSimApp extends StatelessWidget {
-  const ObscuraSimApp({super.key});
+  final SharedPreferences prefs;
+
+  const ObscuraSimApp({super.key, required this.prefs});
 
   @override
   Widget build(BuildContext context) {
@@ -41,14 +50,19 @@ class ObscuraSimApp extends StatelessWidget {
       providers: [
         RepositoryProvider(create: (context) => DatabaseService()),
         RepositoryProvider(create: (context) => ImageProcessingService()),
+        RepositoryProvider(create: (context) => AudioService()),
         RepositoryProvider<CameraRepository>(create: (context) => CameraRepositoryImpl()),
+        RepositoryProvider(create: (context) => SettingsRepository(prefs)),
       ],
       child: MultiBlocProvider(
         providers: [
+          BlocProvider(create: (context) => SettingsBloc(repository: context.read<SettingsRepository>())),
           BlocProvider(
             create: (context) => CameraBloc(
               imageProcessingService: context.read<ImageProcessingService>(),
               cameraRepository: context.read<CameraRepository>(),
+              settingsRepository: context.read<SettingsRepository>(), // Pass SettingsRepository
+              audioService: context.read<AudioService>(),
             ),
           ),
           BlocProvider(create: (context) => FilterBloc()),
@@ -60,7 +74,7 @@ class ObscuraSimApp extends StatelessWidget {
           ),
         ],
         child: MaterialApp(
-          title: 'ObscuraSim',
+          title: 'Obscura', // Renamed to match manifest
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             brightness: Brightness.dark,
@@ -141,11 +155,16 @@ class _SplashScreenState extends State<SplashScreen>
     // Navigation vers l'écran principal après l'animation
     _navigationTimer = Timer(const Duration(seconds: 3), () {
       if (mounted) {
+        final settingsBloc = context.read<SettingsBloc>();
+        final isOnboardingCompleted = settingsBloc.state.isOnboardingCompleted;
+
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const SimpleViewfinderScreen(),
+                isOnboardingCompleted
+                    ? const SimpleViewfinderScreen()
+                    : const OnboardingScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               return FadeTransition(

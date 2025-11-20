@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
-        android:label="ObscuraSim"
+        android:label="Obscura"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

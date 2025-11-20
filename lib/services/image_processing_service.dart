@@ -36,6 +36,17 @@ Future<String> isolatedImageProcessor(ProcessingRequest request) async {
     throw Exception('Impossible de décoder l\'image');
   }
 
+  // Redimensionner si l'image est trop grande pour éviter les crashs mémoire (OOM)
+  // On limite à 2048px sur le bord le plus long, suffisant pour l'affichage et le partage
+  if (image.width > 2048 || image.height > 2048) {
+    image = img.copyResize(
+      image, 
+      width: image.width >= image.height ? 2048 : null,
+      height: image.height > image.width ? 2048 : null,
+      maintainAspect: true
+    );
+  }
+
   // Appliquer l'inversion si nécessaire (camera obscura effect)
   if (request.invert) {
     image = img.flip(image, direction: img.FlipDirection.both);
@@ -292,4 +303,94 @@ class ImageProcessingService {
       return Uint8List.fromList(img.encodeJpg(thumbnail, quality: 70));
     }, bytes);
   }
+
+  Future<String> generateFramedImage(String imagePath, String title, String subtitle) async {
+    final Directory appDir = await getApplicationDocumentsDirectory();
+    final String fileName = 'framed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final String outputPath = '${appDir.path}/$fileName';
+
+    final request = FrameRequest(
+      imagePath: imagePath,
+      title: title,
+      subtitle: subtitle,
+      outputPath: outputPath,
+    );
+
+    return compute(isolatedFrameProcessor, request);
+  }
+}
+
+class FrameRequest {
+  final String imagePath;
+  final String title;
+  final String subtitle;
+  final String outputPath;
+
+  FrameRequest({
+    required this.imagePath,
+    required this.title,
+    required this.subtitle,
+    required this.outputPath,
+  });
+}
+
+Future<String> isolatedFrameProcessor(FrameRequest request) async {
+  final File imageFile = File(request.imagePath);
+  final Uint8List bytes = await imageFile.readAsBytes();
+  img.Image? image = img.decodeImage(bytes);
+
+  if (image == null) throw Exception('Impossible de décoder l\'image');
+
+  // Créer un canvas plus grand (blanc)
+  final int borderSize = (image.width * 0.05).round(); // 5% de bordure
+  final int bottomSize = (image.width * 0.20).round(); // 20% en bas pour le texte (Polaroid style)
+  
+  final framedImage = img.Image(
+    width: image.width + borderSize * 2,
+    height: image.height + borderSize + bottomSize,
+  );
+  
+  // Remplir de blanc
+  img.fill(framedImage, color: img.ColorRgb8(255, 255, 255));
+
+  // Dessiner l'image au centre
+  img.compositeImage(
+    framedImage, 
+    image, 
+    dstX: borderSize, 
+    dstY: borderSize,
+  );
+
+  // Ajouter le texte (si possible avec une police simple)
+  // Note: 'image' package a des polices bitmap limitées par défaut.
+  // On utilise arial_24 ou 48 selon la taille.
+  // Pour simplifier, on utilise arial_48 si l'image est grande, sinon 24.
+  final font = img.arial24;
+  
+  final textColor = img.ColorRgb8(50, 50, 50);
+  
+  // Titre (ex: Date)
+  img.drawString(
+    framedImage,
+    request.title,
+    font: font,
+    x: borderSize,
+    y: image.height + borderSize + (bottomSize ~/ 3),
+    color: textColor,
+  );
+
+  // Sous-titre (ex: Filtre)
+  img.drawString(
+    framedImage,
+    request.subtitle,
+    font: font,
+    x: borderSize,
+    y: image.height + borderSize + (bottomSize ~/ 3) + 30,
+    color: textColor,
+  );
+
+  final File outputFile = File(request.outputPath);
+  await outputFile.writeAsBytes(img.encodeJpg(framedImage, quality: 95));
+
+  return request.outputPath;
 }

@@ -15,7 +15,7 @@ class DatabaseService {
     final String path = join(await getDatabasesPath(), 'obscura_sim.db');
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -24,21 +24,23 @@ class DatabaseService {
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE photos(
-        id TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY,
         path TEXT NOT NULL,
-        capturedAt TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
         filter INTEGER NOT NULL,
         status INTEGER NOT NULL,
-        motionBlur REAL,
-        thumbnailData BLOB,
-        isPortrait INTEGER DEFAULT 0
+        motion_blur REAL,
+        is_portrait INTEGER DEFAULT 0
       )
     ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('ALTER TABLE photos ADD COLUMN isPortrait INTEGER DEFAULT 0');
+    if (oldVersion < 3) {
+      // Simple migration: Drop and recreate to ensure clean schema
+      // In a real app, we would migrate data.
+      await db.execute('DROP TABLE IF EXISTS photos');
+      await _onCreate(db, newVersion);
     }
   }
 
@@ -55,7 +57,7 @@ class DatabaseService {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'photos',
-      orderBy: 'capturedAt DESC',
+      orderBy: 'timestamp DESC',
     );
 
     return List.generate(maps.length, (i) {
@@ -73,7 +75,7 @@ class DatabaseService {
     );
   }
 
-  Future<void> deletePhoto(String id) async {
+  Future<void> deletePhoto(int id) async {
     final db = await database;
     await db.delete(
       'photos',

@@ -195,24 +195,22 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       : Matrix4.identity(),
                   child: RotatedBox(
                     quarterTurns: photo.isPortrait ? 1 : 0,  // Rotate 90° if portrait
-                    child: photo.thumbnailData != null
-                        ? Image.memory(
-                            photo.thumbnailData!,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.file(
-                            File(photo.path),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.black26,
-                                child: const Icon(
-                                  Icons.broken_image,
-                                  color: Colors.white24,
-                                ),
-                              );
-                            },
+                    child: Image(
+                      image: ResizeImage(
+                        FileImage(File(photo.path)),
+                        width: 200, // Optimize for grid
+                      ),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.black26,
+                          child: const Icon(
+                            Icons.broken_image,
+                            color: Colors.white24,
                           ),
+                        );
+                      },
+                    ),
                   ),
                 ),
                 // Overlay pour les négatifs
