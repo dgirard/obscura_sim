@@ -185,32 +185,27 @@ class _GalleryScreenState extends State<GalleryScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // Image inversée pour les négatifs avec détection d'orientation
+                // Image inversée pour les négatifs (effet visuel uniquement)
                 Transform(
                   alignment: Alignment.center,
                   transform: isNegative
-                      ? (Matrix4.identity()
-                        ..rotateX(3.14159)
-                        ..rotateY(3.14159))
+                      ? (Matrix4.identity()..rotateZ(3.14159)) // Rotation 180° standard
                       : Matrix4.identity(),
-                  child: RotatedBox(
-                    quarterTurns: photo.isPortrait ? 1 : 0,  // Rotate 90° if portrait
-                    child: Image(
-                      image: ResizeImage(
-                        FileImage(File(photo.path)),
-                        width: 200, // Optimize for grid
-                      ),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.black26,
-                          child: const Icon(
-                            Icons.broken_image,
-                            color: Colors.white24,
-                          ),
-                        );
-                      },
+                  child: Image(
+                    image: ResizeImage(
+                      FileImage(File(photo.path)),
+                      width: 200, // Optimize for grid
                     ),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.black26,
+                        child: const Icon(
+                          Icons.broken_image,
+                          color: Colors.white24,
+                        ),
+                      );
+                    },
                   ),
                 ),
                 // Overlay pour les négatifs

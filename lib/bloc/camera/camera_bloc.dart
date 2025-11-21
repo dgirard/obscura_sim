@@ -371,7 +371,7 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
         savedPath,
         FilterType.none,
         0,
-        rotateQuarterTurns: isPortrait ? 1 : 0,
+        rotateQuarterTurns: isPortrait ? 1 : 0, 
       );
 
       // Phase de développement (Simulation)

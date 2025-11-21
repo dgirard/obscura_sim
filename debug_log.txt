@@ -1,0 +1,200 @@
+11-20 18:13:55.392  2728  2728 I NfcDispatcher: dispatchTag: no match
+11-20 18:13:55.392  2728  2728 D NfcService: isEndPointRemovalDetectionSupported: not supported
+11-20 18:13:55.392  2728  2728 D NfcService: dispatchTagEndpoint: Tag dispatch failed
+11-20 18:13:55.392  2728  2728 D libnfc_nci: startStopPolling: enter; isStart=0
+11-20 18:13:55.393  2728  2939 D libnfc_nci: nfaDeviceManagementCallback: enter; event=0x2
+11-20 18:13:55.393  2728  2939 D libnfc_nci: nfaDeviceManagementCallback: NFA_DM_SET_CONFIG_EVT
+11-20 18:13:55.393  2728  2728 D libnfc_nci: startStopPolling: exit
+11-20 18:13:55.393  2728  2728 D NfcService: pollingDelay: delay 30000
+11-20 18:13:55.393  2728  2728 D NfcService: isEndPointRemovalDetectionSupported: not supported
+11-20 18:13:55.393  2728 27544 D NativeNfcTag: Tag lost, restarting polling loop
+11-20 18:13:55.393  2728 27544 D libnfc_nci: nativeNfcTag_doDisconnect: enter
+11-20 18:13:55.393  2728 27544 D libnfc_nci: nativeNfcTag_doDisconnect: exit
+11-20 18:13:55.393  2728 27544 D NativeNfcTag: Stopping background presence check
+11-20 18:13:55.396  2728  2939 D libnfc_nci: nfaConnectionCallback: NFA_DEACTIVATED_EVT   Type=3, gIsTagDeactivating=0
+11-20 18:13:55.396  2728  2939 D libnfc_nci: NfcTag::setDeactivationState: state=0
+11-20 18:13:55.396  2728  2939 D libnfc_nci: NfcTag::resetTechnologies
+11-20 18:13:55.396  2728  2939 D libnfc_nci: notifyTagDiscovered: discovered=0
+11-20 18:13:55.396  2728  2939 D NfcService: onTagRfDiscovered: false
+11-20 18:13:55.396  2728  2939 D libnfc_nci: nativeNfcTag_abortWaits
+11-20 18:13:55.758  1119 27541 W Lyric   : shutter_notification_manager.cc:254: 3 calls in 18 sec(s): re-sync SOF and vsync events. counter offset: 0 timestamp drift: -292784ns at frame count: 37
+11-20 18:13:55.946  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CHARGE-WLC:35.9132 raw data: VIRTUAL-SKIN-CHARGE-WLC:35913.2 disp_therm:29902 skin_therm2:41525 usb_pwr_therm2:30236 
+11-20 18:13:55.959  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CHARGE-WLC power_budget=4665.78 err=3.08677 s_power=2000 time_elapsed_ms=7016 p=2469.42 i=800 d=-0 dt_per_min=nan compensation=0 budget transient=0 control target=2 excluded power budget=603.637 (PARTIAL_SYSTEM_POWER: 1207.27 mW, cdev_weight: 0.500000)
+11-20 18:13:55.959  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CPU:34.8926 raw data: VIRTUAL-SKIN:34892.6 VIRTUAL-SKIN-CPU:34892.6 
+11-20 18:13:55.959  1949  1960 I pixel-thermal: VIRTUAL-SKIN:34.8926 raw data: VIRTUAL-SKIN:34892.6 
+11-20 18:13:55.959  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CHARGE:34.8926 raw data: VIRTUAL-SKIN:34892.6 VIRTUAL-SKIN-CHARGE:34892.6 
+11-20 18:13:55.959  1949  1960 I pixel-thermal: VIRTUAL-SKIN-HINT:34.8926 raw data: VIRTUAL-SKIN:34892.6 VIRTUAL-SKIN-HINT:34892.6 
+11-20 18:13:55.959  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CPU-GPU:34.8926 raw data: VIRTUAL-SKIN:34892.6 VIRTUAL-SKIN-CPU-GPU:34892.6 
+11-20 18:13:55.959  1949  1960 I pixel-thermal: cellular-emergency:34.8926 raw data: cellular-emergency:34892.6 
+11-20 18:13:55.959  1949  1960 I pixel-thermal: skin_therm1:35.334 raw data: skin_therm1:35334 
+11-20 18:13:56.234  1119 27541 W Lyric   : shutter_notification_manager.cc:270: 6 calls in 11 sec(s): vsync timeout for frame 51
+11-20 18:13:56.234  1119 27541 I Lyric   : shutter_notification_manager.cc:312: 168 calls in 23 sec(s): vsync_timestamp unavailable. Apply previous vsync_sof_offset -286954
+11-20 18:13:56.269 26619 26619 I flutter : Audio error: PlatformException(AndroidAudioError, null, java.lang.IllegalStateException
+11-20 18:13:56.269 26619 26619 I flutter : 	at android.media.MediaPlayer._prepareAsync(Native Method)
+11-20 18:13:56.269 26619 26619 I flutter : 	at android.media.MediaPlayer.prepareAsync(MediaPlayer.java:1371)
+11-20 18:13:56.269 26619 26619 I flutter : 	at A.o1.p(SourceFile:5)
+11-20 18:13:56.269 26619 26619 I flutter : 	at Z1.o.a(SourceFile:20)
+11-20 18:13:56.269 26619 26619 I flutter : 	at Z1.o.i(SourceFile:44)
+11-20 18:13:56.269 26619 26619 I flutter : 	at Y1.c.d(SourceFile:823)
+11-20 18:13:56.269 26619 26619 I flutter : 	at Y1.b.l(SourceFile:70)
+11-20 18:13:56.269 26619 26619 I flutter : 	at io.flutter.plugin.editing.h.i(SourceFile:28)
+11-20 18:13:56.269 26619 26619 I flutter : 	at u.u.run(SourceFile:143)
+11-20 18:13:56.269 26619 26619 I flutter : 	at android.os.Handler.handleCallback(Handler.java:1041)
+11-20 18:13:56.269 26619 26619 I flutter : 	at android.os.Handler.dispatchMessage(Handler.java:103)
+11-20 18:13:56.269 26619 26619 I flutter : 	at android.os.Looper.dispatchMessage(Looper.java:315)
+11-20 18:13:56.269 26619 26619 I flutter : 	at android.os.Looper.loopOnce(Looper.java:251)
+11-20 18:13:56.269 26619 26619 I flutter : 	at android.os.Looper.loop(Looper.java:349)
+11-20 18:13:56.269 26619 26619 I flutter : 	at android.app.ActivityThread.main(ActivityThread.java:9041)
+11-20 18:13:56.269 26619 26619 I flutter : 	at java.lang.reflect.Method.invoke(Native Method)
+11-20 18:13:56.269 26619 26619 I flutter : 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:593)
+11-20 18:13:56.269 26619 26619 I flutter : 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:929)
+11-20 18:13:56.269 26619 26619 I flutter : , null)
+11-20 18:13:56.370  1616 27546 D Vibrator: waitForComplete: Vibrator is already off
+11-20 18:13:56.436  1119 27519 I Lyric   : g3aa_pipeline.cc:2224: [Bayer1] Frame Drop Dump; Skipped: [2]. Frame drop rate: 1.67%
+11-20 18:13:56.436  1119 27519 I Lyric   : g3aa_pipeline.cc:2158: [Bayer1][Frame 57][SOF 57][ VALID ] frame_id: 56:[57], Timestamp: 1351717815167955, HW was last programmed at SOF of Frame 56 Queue: [57 58].
+11-20 18:13:56.436  1119 27519 I Lyric   : g3aa_pipeline.cc:2224: [PDAF1] Frame Drop Dump; Skipped: [2]. Frame drop rate: 1.67%
+11-20 18:13:56.436  1119 27519 I Lyric   : g3aa_pipeline.cc:2158: [PDAF1][Frame 57][SOF 57][ VALID ] frame_id: 56:[57], Timestamp: 1351717815201484, HW was last programmed at SOF of Frame 56 Queue: [57 58].
+11-20 18:13:56.506  1119  1708 I Lyric   : multicam_activation_resolver.cc:1060: Enter power saving, remove follower for power saving clients at zoom ratio: 1, framework request id: 61
+11-20 18:13:56.562  2431  2434 I deeptouch: I0000 00:00:1763658836.562786    2434 tf_lite_classifier.cc:413] Event stream classified as kNone
+11-20 18:13:56.603  1119 27503 I Lyric   : retiming_node.cc:1692: Rear(hal id: 2), Over the past 2.012036175s there were 58 responses sent and 58 of them had no error. FPS: 28.8265 Non-error FPS: 28.8265
+11-20 18:13:56.606  1616 27547 D Vibrator: waitForComplete: Vibrator is already off
+11-20 18:13:56.655  1119 27511 I GAF     : gaf_data_manager_impl.cc:333: 3 calls in 5 sec(s): RearNormalStatus Transisition kFocused -> kUnknown , curpos 194 
+11-20 18:13:56.656  1119 27511 I GAF     : gaf_trigger_pending_processor.cc:141: 4 calls in 2 sec(s): RearNormaltrigger: is_precise_algo true, mainPdConf true, config_skip_frame 0, focus_trigger_pending false, main_backup_switch_count 0, trigger_algo 1, pd_main_is_sw_pd true, depth_conf true, depth_trig false
+11-20 18:13:56.656  1119 27511 I GAF     : gaf_state_handler_coarse_scan.cc:352: 1 calls in 2 sec(s): RearNormalStart Coarse Search
+11-20 18:13:56.656  1119 27511 I GAF     : gaf_data_manager_impl.cc:320: 4 calls in 5 sec(s): RearNormalState Transisition kMonitor -> kCoarseScan , curpos 194
+11-20 18:13:56.656  1119 27511 I G3ACoordinator: af_state_machine.cc:256: camera_name=RearNormal: af_mode=ContinuousPicture, event=ScanStart, af_state=PassiveFocused->PassiveScan
+11-20 18:13:56.962  1119 27503 I GAF     : gaf_state_handler_coarse_scan.cc:527: 1 calls in 2 sec(s): RearNormalFine Scan disabled. intent: 0
+11-20 18:13:56.962  1119 27503 I G3ACoordinator: af_state_machine.cc:256: camera_name=RearNormal: af_mode=ContinuousPicture, event=ScanSuccess, af_state=PassiveScan->PassiveFocused
+11-20 18:13:57.029  1119 27511 I GAF     : gaf_metric_algos_pd_peri.cc:239: 71 calls in 3 sec(s): RearNormalselect index[4] target pos 196 = (192 + 4)
+11-20 18:13:57.029  1119 27511 I GAF     : gaf_mod_data_analyzer_impl.cc:490: 75 calls in 3 sec(s): RearNormalbTrigger false, mbROIup false, ORoiup true, trigger_delay 0, input_roi: kDefault       | id[0](1988,1493, 647, 486), attribute: 0, is_boh:0, face_roi_update: false
+11-20 18:13:57.029  1119 27511 I GAF     : gaf_mod_hw_controller_impl.cc:384: 78 calls in 3 sec(s): RearNormalfv Config: algo kMain type: kGAfFocusTypeNormal (Coarse)
+11-20 18:13:57.030  1119 27511 I GAF     : gaf_core_impl.cc:874: 75 calls in 3 sec(s): RearNormalframework ReqId[75]: sensor_soe_timestamp_ns 1351718373115187 cPos-->nextPos[192-->192] maxPos 324 vcm_dac 1908 status kFocused    state kMonitor      fMode kAutoActive        opMode kPreview      searchType kMain         ROI kDefault       | id[0](1988,1493, 647, 486), attribute: 0, is_boh:0 eye_roi 0 crop_window (   0,   0,4624,3472) inFaceCnt 0 ScType kGAfFocusTypeNormal    depth_metric_type kMainPd       pd_tPos 193 pd_conf 1000.00 PdSourceType(pdIn,pdOut,cnt) (kLow ,kLow ,0) tof_tPos  -1 tof_confLvl 0.00 tof_isConf 0 tof_GD 0 gyro 0.20 roi_motion kUnknown ledAssist 0 aecSettled 1 luxI 313.74 expI 313.74 g 4.33 et 20.00 bv 1.26 light kGAfTLightNormal  exposureValue -0.00 TF 0 SC 0 ST 0 [roi(0,1) depth(0,1) motion(0,0) 3a(0,1) fv(0,1) peer(0,1)] fv 1690.27 bUpRoi 1 bUpBAF 1 bUpPD 1 FVCmpEn 0 FVCmpRe 0 zPlusCropWin(   0,   0,4624,3472) zPlusRatios(1.00, 1.00)
+11-20 18:13:57.271  1949  1960 I pixel-thermal: VIRTUAL-USB-UI:0 raw data: USB-MINUS-SKIN2:-11912 VIRTUAL-USB-UI:0 skin_therm2:41525 usb_pwr_therm:29613 
+11-20 18:13:57.281  1949  1960 I pixel-thermal: VIRTUAL-USB-THROTTLING:0 raw data: USB-MINUS-SKIN2:-11912 VIRTUAL-USB-THROTTLING:0 usb_pwr_therm:29613 
+11-20 18:13:57.281  1949  1960 I pixel-thermal: usb_pwr_therm:29.613 raw data: usb_pwr_therm:29613 
+11-20 18:13:57.281  1949  1960 I pixel-thermal: Power rails total power: 2604.04 mW for 60015 ms
+11-20 18:13:57.281  1949  1960 I pixel-thermal: Power rails [S6M_LLDO1: 71.27 mW] [L7S_SENSORS: 4.19 mW] [S10M_VDD_TPU: 25.25 mW] [S6S_LLDO2: 32.37 mW] [S8M_LLDO2: 42.67 mW] [S5M_VDD_INT: 242.44 mW] 
+11-20 18:13:57.281  1949  1960 I pixel-thermal: Power rails [S3M_VDD_CPUCL1: 97.65 mW] [VSYS_PWR_CAM: 556.41 mW] [S2M_VDD_CPUCL2: 278.24 mW] [S1M_VDD_MIF: 160.01 mW] [S4M_VDD_CPUCL0: 148.87 mW] [VSYS_PWR_WLAN_BT: 26.82 mW] 
+11-20 18:13:57.281  1949  1960 I pixel-thermal: Power rails [VSYS_PWR_RFFE: 0.40 mW] [VSYS_PWR_MODEM: 135.38 mW] [VSYS_PWR_MMWAVE: 0.24 mW] [S7S_MLDO: 182.26 mW] [S8S_VDD_G3D_L2: 16.18 mW] [S5S_VDDQ_MEM: 21.27 mW] 
+11-20 18:13:57.281  1949  1960 I pixel-thermal: Power rails [S1S_VDD_CAM: 133.78 mW] [S2S_VDD_G3D: 75.90 mW] [S9S_VDD_AOC: 22.84 mW] [S4S_VDD2H_MEM: 165.74 mW] [L15M_VDD_SLC_M: 24.48 mW] [VSYS_PWR_DISPLAY: 139.38 mW] 
+11-20 18:13:57.281  1949  1960 I pixel-thermal: CDEV log dc_icl state:0 gxp-cooling state:0 tpu_cooling state:0 usbc-port state:0 thermal-cpufreq-1 state:0 fcc state:0 thermal-gpufreq-0 state:0 thermal-cpufreq-2 state:0 thermal-cpufreq-0 state:0 
+11-20 18:13:57.882  1595  2337 E WifiStaIfaceAidlImpl: getCachedScanData failed with service-specific exception: android.os.ServiceSpecificException:  (code 4)
+11-20 18:13:57.957  1595  2344 D ConnectivityService: NetReassign [no changes] [c 2] [a 2] [i 4]
+11-20 18:13:58.144  2431  2434 I deeptouch: I0000 00:00:1763658838.144525    2434 tf_lite_classifier.cc:413] Event stream classified as kNone
+11-20 18:13:58.621  1119 27501 I Lyric   : retiming_node.cc:1692: Rear(hal id: 2), Over the past 2.0174622s there were 59 responses sent and 59 of them had no error. FPS: 29.2447 Non-error FPS: 29.2447
+11-20 18:13:59.568  1119 27511 I Lyric   : g3aa_pipeline.cc:2186: [Bayer1][Frame 151] Submitted transaction on shadow 1. TriggerAt: SOF 150. Last received HW Frame 149 at SOF 149. Queue: [149 150 151]. Result: OK
+11-20 18:13:59.568  1119 27511 I Lyric   : g3aa_pipeline.cc:2186: [PDAF1][Frame 151] Submitted transaction on shadow 1. TriggerAt: SOF 150. Last received HW Frame 149 at SOF 149. Queue: [149 150 151]. Result: OK
+11-20 18:13:59.671  2431  2434 I deeptouch: I0000 00:00:1763658839.671946    2434 tf_lite_classifier.cc:413] Event stream classified as kNone
+11-20 18:13:59.693 26619 26619 D WindowOnBackDispatcher: setTopOnBackInvokedCallback (unwrapped): android.app.Activity$$ExternalSyntheticLambda0@4dc5708
+11-20 18:13:59.694  1595  3391 D CoreBackPreview: Window{24453f3 u0 com.obscurasim.app/com.example.obscura_sim.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@9fe15b5, mPriority=-1, mIsAnimationCallback=false, mOverrideBehavior=0}
+11-20 18:13:59.992 31461 27291 I NearbyMediums: Found Fast Ble Advertisements :
+11-20 18:13:59.992 31461 27291 I NearbyMediums: BleAdvertisement { version=2, socketVersion=2, isFast=true, serviceIdHash=null, data=[ 0x23 0x37 0x39 0x53 0x38 0x11 0x32 0x4d 0x6f 0x14 0xd5 0x13 0xf2 0x4a 0x09 0x9b 0xaf 0xc2 0xcf 0xdc 0x1a 0x6a 0x74 ], deviceToken=[ 0xd3 0x5c ], rxAdvertisement=null } : 1 times.
+11-20 18:13:59.992 31461 27291 I NearbyMediums: Total 1 fast advertisements from 1 unique advertisers.
+11-20 18:13:59.992 31461 27291 I NearbyMediums: Current Tracked Scanning Clients are : {NearbyConnections.EnvironmentMonitor, NearbySharing}
+11-20 18:14:00.019  1119 27511 W Lyric   : generic_power_throttle_controller.cc:766: 1986 calls in 10 sec(s):  Unsupported thermal policy: LDAF
+11-20 18:14:00.020  1119 27511 W G3ACoordinator: data_manager.cc:154: [5, 28, 9001] can't be found
+11-20 18:14:00.020  1119 27511 I GAF     : gaf_metric_algos_pd_peri.cc:239: 88 calls in 3 sec(s): RearNormalselect index[4] target pos 198 = (192 + 6)
+11-20 18:14:00.020  1119 27511 I GAF     : gaf_mod_data_analyzer_impl.cc:490: 88 calls in 3 sec(s): RearNormalbTrigger false, mbROIup false, ORoiup true, trigger_delay 0, input_roi: kDefault       | id[0](1988,1493, 647, 486), attribute: 0, is_boh:0, face_roi_update: false
+11-20 18:14:00.020  1119 27511 I GAF     : gaf_mod_hw_controller_impl.cc:384: 88 calls in 3 sec(s): RearNormalfv Config: algo kMain type: kGAfFocusTypeNormal (Coarse)
+11-20 18:14:00.020  1119 27511 I GAF     : gaf_core_impl.cc:874: 88 calls in 3 sec(s): RearNormalframework ReqId[163]: sensor_soe_timestamp_ns 1351721351196293 cPos-->nextPos[192-->192] maxPos 324 vcm_dac 1909 status kFocused    state kMonitor      fMode kAutoActive        opMode kPreview      searchType kMain         ROI kDefault       | id[0](1988,1493, 647, 486), attribute: 0, is_boh:0 eye_roi 0 crop_window (   0,   0,4624,3472) inFaceCnt 0 ScType kGAfFocusTypeNormal    depth_metric_type kMainPd       pd_tPos 193 pd_conf 1000.00 PdSourceType(pdIn,pdOut,cnt) (kLow ,kLow ,0) tof_tPos  -1 tof_confLvl 0.00 tof_isConf 0 tof_GD 0 gyro 0.04 roi_motion kUnknown ledAssist 0 aecSettled 1 luxI 313.79 expI 313.79 g 2.88 et 30.00 bv 1.25 light kGAfTLightNormal  exposureValue -0.01 TF 0 SC 0 ST 1 [roi(0,1) depth(0,1) motion(0,1) 3a(0,1) fv(0,1) peer(0,1)] fv 1801.62 bUpRoi 1 bUpBAF 1 bUpPD 1 FVCmpEn 0 FVCmpRe 0 zPlusCropWin(   0,   0,4624,3472) zPlusRatios(1.00, 1.00)
+11-20 18:14:00.352  1421  1421 W TracingMuxer: type=1400 audit(0.0:752704): avc:  denied  { write } for  name="traced_producer" dev="tmpfs" ino=1310 scontext=u:r:gxp_logging:s0 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0
+11-20 18:14:00.652  1119 27503 I Lyric   : retiming_node.cc:1692: Rear(hal id: 2), Over the past 2.031098959s there were 60 responses sent and 60 of them had no error. FPS: 29.5407 Non-error FPS: 29.5407
+11-20 18:14:01.002  3998  4065 I AiAiEcho: (REDACTED) Predicting[%d]: %s
+11-20 18:14:01.003  3998  4065 I AiAiEcho: (REDACTED) EchoTargets: %s
+11-20 18:14:01.003  3998  4065 I AiAiEcho: Filtered by AiAi flag check: %s
+11-20 18:14:01.004  3998  4065 I AiAiEcho: (REDACTED) #weatherSubItemsTwiddler: Weather removes SubtitleSupplementalItem in surface: %s
+11-20 18:14:01.005  3998  4065 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-20 18:14:01.006  3998  4065 I AiAiEcho: (REDACTED) Predicting[%d]: %s
+11-20 18:14:01.007  3998  4065 I AiAiEcho: (REDACTED) EchoTargets: %s
+11-20 18:14:01.007  3998  4065 I AiAiEcho: Filtered by AiAi flag check: %s
+11-20 18:14:01.008  3998  4065 I AiAiEcho: (REDACTED) #weatherSubItemsTwiddler: Weather removes SubtitleSupplementalItem in surface: %s
+11-20 18:14:01.008  3998  4065 I AiAiEcho: #remoteViewsTwiddler: feature disabled.
+11-20 18:14:01.013  1595  2337 E WifiStaIfaceAidlImpl: getCachedScanData failed with service-specific exception: android.os.ServiceSpecificException:  (code 4)
+11-20 18:14:01.014  3998  4065 I AiAiEcho: (REDACTED) #postPredictionTargets: Sending updates to UISurface %s with targets# %s (types=[%s])
+11-20 18:14:01.017  2440  2440 I WeatherSmartspaceView: setFormattedContentDescription: text=1°C, iconDescription=Temps clair avec quelques nuages, contentDescription=Temps clair avec quelques nuages, 1°C
+11-20 18:14:01.017  2440  2440 I WeatherSmartspaceView: setFormattedContentDescription: text=1°C, iconDescription=Temps clair avec quelques nuages, contentDescription=Temps clair avec quelques nuages, 1°C
+11-20 18:14:01.017  2440  2440 I WeatherData: Weather data parsed PARTLY_CLOUDY ("Temps clair avec quelques nuages") 1°C from Bundle[{description=Temps clair avec quelques nuages, feedback_intent=null, explanation_intent=Supplier{VAL_PARCELABLE@192+1744}, is_gaia_linked_data=true, use_celsius=true, state=5, temperature=1}]
+11-20 18:14:01.017  2440  2440 W SsPagerDots: Total number of pages invalid: 0. Assuming 1 page.
+11-20 18:14:01.018  3998  4065 I AiAiEcho: (REDACTED) #postPredictionTargets: Sending updates to UISurface %s with targets# %s (types=[%s])
+11-20 18:14:01.038  2637  3726 D TemperatureStateSource: sequence=100484 actualDelay=10000
+11-20 18:14:01.039  2637  3726 D TemperatureStateSource: Reading temperature: sequence=100485
+11-20 18:14:01.041  1949  1949 I pixel-thermal: VIRTUAL-SKIN:35.2249 raw data: VIRTUAL-NEU-QUT-SKIN1-SKIN2-USB-USB2-GNSS-1:33891.1 VIRTUAL-NEU-QUT-SKIN1-SKIN2-USB-USB2-GNSS-4:33770.9 VIRTUAL-QUT-SKIN2-USB-GNSS-3:35224.9 VIRTUAL-QUT-SKIN2-USB-USB2-2:31438.2 VIRTUAL-SKIN:35224.9 gnss_tcxo_therm:36847 neutral_therm:37270 quiet_therm:34109 skin_therm1:35556 skin_therm2:42074 usb_pwr_therm:29613 usb_pwr_therm2:30125 
+11-20 18:14:01.042  2637  3726 D TemperatureStateSource: getDeviceTemperatures: sequence=100485 deviceTemperatureType=3 temperatureSource=0 temperatures=[35.224865]
+11-20 18:14:01.042  2637  3726 D BusinessScope: Enqueuing the block
+11-20 18:14:01.042  2637  3726 D TemperatureStateSource: sequence=100485 waitTime=10000
+11-20 18:14:01.042  2637  2777 D BusinessScope: Start running the #210021 block
+11-20 18:14:01.045  1949  1949 I pixel-thermal: VIRTUAL-SKIN:35.2249 raw data: VIRTUAL-SKIN:35224.9 
+11-20 18:14:01.045  2637  2777 I TemperatureStateSource: temperature was set
+11-20 18:14:01.045  2637  2777 D BusinessScope: Enqueuing the block
+11-20 18:14:01.045  2637  2777 D ImpulseStateSource: Notify clients: 105003
+11-20 18:14:01.046  2637  2777 D BusinessScope: Finish running the #210021 block
+11-20 18:14:01.046  2637  2777 D BusinessScope: Start running the #210022 block
+11-20 18:14:01.047  2637  3726 D BusinessScope: Finish running the #210022 block
+11-20 18:14:01.077 23924 27663 W Binder  : Caught a RuntimeException from the binder stub implementation.
+11-20 18:14:01.077 23924 27663 W Binder  : java.lang.UnsupportedOperationException
+11-20 18:14:01.077 23924 27663 W Binder  : 	at bpd.b(PG:3)
+11-20 18:14:01.077 23924 27663 W Binder  : 	at bpd.y(PG:34)
+11-20 18:14:01.077 23924 27663 W Binder  : 	at aof.onTransact(PG:21)
+11-20 18:14:01.077 23924 27663 W Binder  : 	at android.os.Binder.execTransactInternal(Binder.java:1446)
+11-20 18:14:01.077 23924 27663 W Binder  : 	at android.os.Binder.execTransact(Binder.java:1385)
+11-20 18:14:01.080 23924 27663 W Binder  : Caught a RuntimeException from the binder stub implementation.
+11-20 18:14:01.080 23924 27663 W Binder  : java.lang.UnsupportedOperationException
+11-20 18:14:01.080 23924 27663 W Binder  : 	at bpd.b(PG:3)
+11-20 18:14:01.080 23924 27663 W Binder  : 	at bpd.y(PG:34)
+11-20 18:14:01.080 23924 27663 W Binder  : 	at aof.onTransact(PG:21)
+11-20 18:14:01.080 23924 27663 W Binder  : 	at android.os.Binder.execTransactInternal(Binder.java:1446)
+11-20 18:14:01.080 23924 27663 W Binder  : 	at android.os.Binder.execTransact(Binder.java:1385)
+11-20 18:14:01.083 23924 27663 W Binder  : Caught a RuntimeException from the binder stub implementation.
+11-20 18:14:01.083 23924 27663 W Binder  : java.lang.UnsupportedOperationException
+11-20 18:14:01.083 23924 27663 W Binder  : 	at bpd.b(PG:3)
+11-20 18:14:01.083 23924 27663 W Binder  : 	at bpd.y(PG:34)
+11-20 18:14:01.083 23924 27663 W Binder  : 	at aof.onTransact(PG:21)
+11-20 18:14:01.083 23924 27663 W Binder  : 	at android.os.Binder.execTransactInternal(Binder.java:1446)
+11-20 18:14:01.083 23924 27663 W Binder  : 	at android.os.Binder.execTransact(Binder.java:1385)
+11-20 18:14:01.105  1595  2344 D ConnectivityService: NetReassign [no changes] [c 3] [a 2] [i 4]
+11-20 18:14:01.124  1119 27541 W Lyric   : shutter_notification_manager.cc:270: 13 calls in 5 sec(s): vsync timeout for frame 195
+11-20 18:14:01.159  1949  1949 I pixel-thermal: VIRTUAL-SKIN:35.2249 raw data: VIRTUAL-SKIN:35224.9 
+11-20 18:14:01.462  1119 27519 I Lyric   : g3aa_pipeline.cc:2158: [Bayer1][Frame 205][SOF 205][ VALID ] frame_id: 204:[205], Timestamp: 1351722841035755, HW was last programmed at SOF of Frame 204 Queue: [205 206].
+11-20 18:14:01.464  1119 27519 I Lyric   : g3aa_pipeline.cc:2158: [PDAF1][Frame 205][SOF 205][ VALID ] frame_id: 204:[205], Timestamp: 1351722841089466, HW was last programmed at SOF of Frame 204 Queue: [205 206 207].
+11-20 18:14:01.951  1595  2141 D ActivityManager: freezing 4262 com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+11-20 18:14:01.974  1595  2344 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET, states=14
+11-20 18:14:01.976  1595  2344 D InetDiagMessage: Destroyed 0 sockets, proto=IPPROTO_TCP, family=AF_INET6, states=14
+11-20 18:14:01.977  1595  2344 D InetDiagMessage: Destroyed live tcp sockets for uids={99252} in 9ms
+11-20 18:14:02.091  1119 27503 I GAF     : gaf_data_manager_impl.cc:333: 3 calls in 6 sec(s): RearNormalStatus Transisition kFocused -> kUnknown , curpos 192 
+11-20 18:14:02.091  1119 27503 I GAF     : gaf_trigger_pending_processor.cc:141: 1 calls in 6 sec(s): RearNormaltrigger: is_precise_algo true, mainPdConf true, config_skip_frame 0, focus_trigger_pending false, main_backup_switch_count 0, trigger_algo 1, pd_main_is_sw_pd true, depth_conf true, depth_trig false
+11-20 18:14:02.091  1119 27503 I GAF     : gaf_state_handler_coarse_scan.cc:352: 1 calls in 6 sec(s): RearNormalStart Coarse Search
+11-20 18:14:02.091  1119 27503 I GAF     : gaf_searchlet_pd.cc:501: 23 calls in 8 sec(s): RearNormalFine scan intent 0 Conf 669
+11-20 18:14:02.091  1119 27503 I GAF     : gaf_searchlet_pd.cc:367: 2 calls in 8 sec(s): RearNormalStart POS: 192
+11-20 18:14:02.091  1119 27503 I GAF     : gaf_data_manager_impl.cc:320: 2 calls in 6 sec(s): RearNormalState Transisition kMonitor -> kCoarseScan , curpos 192
+11-20 18:14:02.091  1119 27503 I G3ACoordinator: af_state_machine.cc:256: camera_name=RearNormal: af_mode=ContinuousPicture, event=ScanStart, af_state=PassiveFocused->PassiveScan
+11-20 18:14:02.124  1119 27501 I GAF     : gaf_searchlet_pd.cc:373: 19 calls in 8 sec(s): RearNormalFinal POS: 191
+11-20 18:14:02.202  2431  2434 I deeptouch: I0000 00:00:1763658842.202827    2434 tf_lite_classifier.cc:413] Event stream classified as kNone
+11-20 18:14:02.259  1119 27503 I GAF     : gaf_searchlet_pd.cc:380: 2 calls in 8 sec(s): RearNormalCurrent POS: 193 -> Next POS: 192
+11-20 18:14:02.361  1119 27511 I GAF     : gaf_state_handler_coarse_scan.cc:527: 1 calls in 6 sec(s): RearNormalFine Scan disabled. intent: 0
+11-20 18:14:02.362  1119 27511 I GAF     : gaf_mod_focus_finder_impl.cc:495: 2 calls in 8 sec(s): RearNormalFocusCompleted. Final Position: 194
+11-20 18:14:02.362  1119 27511 I G3ACoordinator: af_state_machine.cc:256: camera_name=RearNormal: af_mode=ContinuousPicture, event=ScanSuccess, af_state=PassiveScan->PassiveFocused
+11-20 18:14:02.372  1595  2396 D BackgroundInstallControlService: Package event received: 0
+11-20 18:14:02.387 31461 31461 I NearbyDiscovery: (REDACTED) DiscoveryService onStartCommand action: %s
+11-20 18:14:02.390 31461 32151 I NearbyDiscovery: FastPairApiHandler: trigger firmware update check [CONTEXT service_id=265 ]
+11-20 18:14:02.397 31461 27318 I NearbyDiscovery: (REDACTED) FastPairApiHandler: Send result, package=(%s), requestType=(%s), status=(%s)
+11-20 18:14:02.661  1119 27501 I Lyric   : retiming_node.cc:1692: Rear(hal id: 2), Over the past 2.008630209s there were 59 responses sent and 59 of them had no error. FPS: 29.3733 Non-error FPS: 29.3733
+11-20 18:14:02.855  1119 27541 W Lyric   : shutter_notification_manager.cc:254: 2 calls in 7 sec(s): re-sync SOF and vsync events. counter offset: 0 timestamp drift: -291756ns at frame count: 246
+11-20 18:14:02.963  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CHARGE-WLC:36.171 raw data: VIRTUAL-SKIN-CHARGE-WLC:36171 disp_therm:29925 skin_therm2:42074 usb_pwr_therm2:30125 
+11-20 18:14:02.980  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CHARGE-WLC power_budget=4409.97 err=2.82901 s_power=2000 time_elapsed_ms=7017 p=2263.21 i=800 d=-0 dt_per_min=nan compensation=0 budget transient=0 control target=2 excluded power budget=653.238 (PARTIAL_SYSTEM_POWER: 1306.48 mW, cdev_weight: 0.500000)
+11-20 18:14:02.980  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CPU:35.2249 raw data: VIRTUAL-SKIN:35224.9 VIRTUAL-SKIN-CPU:35224.9 
+11-20 18:14:02.981  1949  1960 I pixel-thermal: VIRTUAL-SKIN:35.2249 raw data: VIRTUAL-SKIN:35224.9 
+11-20 18:14:02.981  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CHARGE:35.2249 raw data: VIRTUAL-SKIN:35224.9 VIRTUAL-SKIN-CHARGE:35224.9 
+11-20 18:14:02.981  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CHARGE power_budget=3189.36 err=3.77514 s_power=1200 time_elapsed_ms=7017 p=2642.59 i=0 d=0 dt_per_min=nan compensation=0 budget transient=0 control target=2 excluded power budget=653.238 (PARTIAL_SYSTEM_POWER: 1306.48 mW, cdev_weight: 0.500000)
+11-20 18:14:02.981  1949  1960 I pixel-thermal: VIRTUAL-SKIN-HINT:35.2249 raw data: VIRTUAL-SKIN:35224.9 VIRTUAL-SKIN-HINT:35224.9 
+11-20 18:14:02.981  1949  1960 I pixel-thermal: VIRTUAL-SKIN-CPU-GPU:35.2249 raw data: VIRTUAL-SKIN:35224.9 VIRTUAL-SKIN-CPU-GPU:35224.9 
+11-20 18:14:02.981  1949  1960 I pixel-thermal: cellular-emergency:35.2249 raw data: VIRTUAL-SKIN:35224.9 cellular-emergency:35224.9 
+11-20 18:14:02.981  1949  1960 I pixel-thermal: skin_therm1:35.556 raw data: skin_therm1:35556 
+11-20 18:14:02.985  1949  1960 I pixel-thermal: Successfully update cdev dc_icl sysfs to 1
+11-20 18:14:02.985  1949  1960 I pixel-thermal: Successfully update cdev fcc sysfs to 1
+11-20 18:14:02.992  3170  3194 W pixelstats-vendor: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: android.frameworks.stats.IStats/default
+11-20 18:14:03.002  3170  3194 W pixelstats-vendor: Thread Pool max thread count is 0. Cannot cache binder as linkToDeath cannot be implemented. serviceName: android.frameworks.stats.IStats/default
+11-20 18:14:03.005  1119 27501 I GAF     : gaf_metric_algos_pd_peri.cc:239: 88 calls in 3 sec(s): RearNormalselect index[7] target pos 197 = (194 + 3)
+11-20 18:14:03.005  1119 27501 I GAF     : gaf_mod_data_analyzer_impl.cc:490: 88 calls in 3 sec(s): RearNormalbTrigger false, mbROIup false, ORoiup true, trigger_delay 0, input_roi: kDefault       | id[0](1988,1493, 647, 486), attribute: 0, is_boh:0, face_roi_update: false
+11-20 18:14:03.005  1119 27501 I GAF     : gaf_mod_hw_controller_impl.cc:384: 88 calls in 3 sec(s): RearNormalfv Config: algo kMain type: kGAfFocusTypeNormal (Coarse)
+11-20 18:14:03.006  1119 27501 I GAF     : gaf_core_impl.cc:874: 88 calls in 3 sec(s): RearNormalframework ReqId[251]: sensor_soe_timestamp_ns 1351724339282590 cPos-->nextPos[194-->194] maxPos 324 vcm_dac 1890 status kFocused    state kMonitor      fMode kAutoActive        opMode kPreview      searchType kMain         ROI kDefault       | id[0](1988,1493, 647, 486), attribute: 0, is_boh:0 eye_roi 0 crop_window (   0,   0,4624,3472) inFaceCnt 0 ScType kGAfFocusTypeNormal    depth_metric_type kMainPd       pd_tPos 197 pd_conf 1000.00 PdSourceType(pdIn,pdOut,cnt) (kLow ,kLow ,0) tof_tPos  -1 tof_confLvl 0.00 tof_isConf 0 tof_GD 0 gyro 0.04 roi_motion kUnknown ledAssist 0 aecSettled 1 luxI 314.85 expI 314.85 g 2.88 et 30.00 bv 1.21 light kGAfTLightNormal  exposureValue 0.00 TF 0 SC 0 ST 0 [roi(0,1) depth(0,1) motion(0,0) 3a(0,1) fv(0,1) peer(0,1)] fv 1377.44 bUpRoi 1 bUpBAF 1 bUpPD 1 FVCmpEn 0 FVCmpRe 0 zPlusCropWin(   0,   0,4624,3472) zPlusRatios(1.00, 1.00)
+11-20 18:14:03.847  1119 27457 I native  : I0000 00:00:1763658843.847682   27457 tripod_detector.cc:71] Enter tripod mode.

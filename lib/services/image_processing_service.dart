@@ -27,8 +27,22 @@ class ProcessingRequest {
 
 // Top-level function for the isolate
 Future<String> isolatedImageProcessor(ProcessingRequest request) async {
-  // Lire l'image
   final File imageFile = File(request.imagePath);
+  final File outputFile = File(request.outputPath);
+
+  // Stratégie "Pass-through" : Si aucune modification n'est requise, on copie simplement
+  // le fichier. Cela préserve à 100% les métadonnées Exif d'origine (orientation, etc.)
+  // et évite les problèmes de rotation lors du ré-encodage.
+  if (request.filter == FilterType.none && 
+      request.motionBlur == 0 && 
+      !request.invert && 
+      request.rotateQuarterTurns == 0) {
+    
+    await imageFile.copy(outputFile.path);
+    return request.outputPath;
+  }
+
+  // Lire l'image pour traitement (si nécessaire)
   final Uint8List bytes = await imageFile.readAsBytes();
   img.Image? image = img.decodeImage(bytes);
 
@@ -36,8 +50,11 @@ Future<String> isolatedImageProcessor(ProcessingRequest request) async {
     throw Exception('Impossible de décoder l\'image');
   }
 
+  // Corriger l'orientation selon les données Exif (standard)
+  // Note: Cette étape supprime les tags Exif mais pivote les pixels correctement
+  image = img.bakeOrientation(image);
+
   // Redimensionner si l'image est trop grande pour éviter les crashs mémoire (OOM)
-  // On limite à 2048px sur le bord le plus long, suffisant pour l'affichage et le partage
   if (image.width > 2048 || image.height > 2048) {
     image = img.copyResize(
       image, 
@@ -47,16 +64,21 @@ Future<String> isolatedImageProcessor(ProcessingRequest request) async {
     );
   }
 
+  // Correction "Intelligente" de l'orientation
+  // Si l'appareil était en mode portrait (request.rotateQuarterTurns == 1)
+  // MAIS que l'image est toujours au format paysage (width > height),
+  // cela signifie que bakeOrientation n'a pas suffi (ex: pas de tag Exif).
+  // On force alors la rotation de 90°.
+  if (request.rotateQuarterTurns == 1 && image.width > image.height) {
+     image = img.copyRotate(image, angle: 90);
+  }
+
   // Appliquer l'inversion si nécessaire (camera obscura effect)
   if (request.invert) {
     image = img.flip(image, direction: img.FlipDirection.both);
   }
-
-  // Appliquer la rotation si nécessaire (pour portrait)
-  if (request.rotateQuarterTurns != 0) {
-    final degrees = request.rotateQuarterTurns * 90;
-    image = img.copyRotate(image, angle: degrees);
-  }
+  
+  // Note: La rotation manuelle inconditionnelle est supprimée au profit de la logique conditionnelle ci-dessus.
 
   // Appliquer le filtre
   image = _applyFilter(image, request.filter);
@@ -67,7 +89,7 @@ Future<String> isolatedImageProcessor(ProcessingRequest request) async {
   }
 
   // Sauvegarder l'image traitée
-  final File outputFile = File(request.outputPath);
+  // outputFile est déjà déclaré au début de la fonction
   await outputFile.writeAsBytes(img.encodeJpg(image, quality: 90));
 
   return request.outputPath;
@@ -298,6 +320,10 @@ class ImageProcessingService {
       if (image == null) {
         throw Exception('Impossible de créer la miniature');
       }
+      
+      // Fixer l'orientation avant de redimensionner pour la miniature
+      image = img.bakeOrientation(image);
+      
       // Redimensionner pour la miniature
       final thumbnail = img.copyResize(image, width: 150);
       return Uint8List.fromList(img.encodeJpg(thumbnail, quality: 70));
@@ -305,9 +331,12 @@ class ImageProcessingService {
   }
 
   Future<String> generateFramedImage(String imagePath, String title, String subtitle) async {
-    final Directory appDir = await getApplicationDocumentsDirectory();
+    // Utiliser le cache externe pour que le fichier soit accessible lors du partage
+    final Directory? cacheDir = await getExternalCacheDirectories().then((dirs) => dirs?.first);
+    final Directory outputDir = cacheDir ?? await getApplicationDocumentsDirectory();
+    
     final String fileName = 'framed_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final String outputPath = '${appDir.path}/$fileName';
+    final String outputPath = '${outputDir.path}/$fileName';
 
     final request = FrameRequest(
       imagePath: imagePath,

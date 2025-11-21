@@ -129,11 +129,14 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
   ) async {
     try {
       // Créer une photo inversée avec filtre
+      // NOTE: On ne demande plus l'inversion physique ici (invert: false)
+      // car on veut garder le fichier "droit" pour que les vignettes soient OK
+      // et pour la compatibilité Exif. L'inversion visuelle se fera dans l'UI.
       final processedPath = await _imageService.processImage(
         event.path,
         event.filter,
         event.motionBlur,
-        invert: true, // Image inversée pour le négatif
+        invert: false, 
       );
 
       // Créer la miniature
@@ -162,12 +165,14 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
   ) async {
     try {
       // Créer une version développée (réinverser le négatif) avec rotation si nécessaire
+      // NOTE: Comme l'image source "Négatif" est maintenant stockée "droite" (non inversée physiquement),
+      // on n'a pas besoin de la ré-inverser ici. On garde le pass-through.
       final developedPath = await _imageService.processImage(
         event.photo.path,
         event.photo.filter,
         0, // Pas de flou supplémentaire lors du développement
-        invert: true, // Réinverser le négatif pour obtenir l'image normale
-        rotateQuarterTurns: event.photo.isPortrait ? 1 : 0, // Rotation pour les photos portrait
+        invert: false, 
+        rotateQuarterTurns: 0, 
       );
 
       // Sauvegarder dans la galerie publique (MediaStore) pour rendre accessible aux autres apps

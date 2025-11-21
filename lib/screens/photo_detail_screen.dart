@@ -69,32 +69,29 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
         Center(
           child: Transform(
             alignment: Alignment.center,
+            // Rotation 180° uniquement pour l'effet "Négatif/Obscura"
             transform: isNegative
                 ? (Matrix4.identity()
-                  ..rotateX(3.14159)
-                  ..rotateY(3.14159))
+                  ..rotateZ(3.14159)) // RotateZ est plus standard pour une rotation 2D
                 : Matrix4.identity(),
-            child: RotatedBox(
-              quarterTurns: photo.isPortrait ? 1 : 0,  // Rotation pour les photos portrait
-              child: InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: Image.file(
-                  File(photo.path),
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.black,
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image,
-                          color: Colors.white24,
-                          size: 64,
-                        ),
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: Image.file(
+                File(photo.path),
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.black,
+                    child: const Center(
+                      child: Icon(
+                        Icons.broken_image,
+                        color: Colors.white24,
+                        size: 64,
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
