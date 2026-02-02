@@ -2,10 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:path/path.dart' as path;
+import 'package:go_router/go_router.dart';
 import '../bloc/gallery/gallery_bloc.dart';
 import '../models/photo.dart';
 import '../services/image_processing_service.dart';
+import '../theme/colors.dart';
 
 class PhotoDetailScreen extends StatefulWidget {
   final List<Photo> photos;
@@ -44,7 +45,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
     if (widget.photos.isEmpty) return const SizedBox.shrink();
     
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: ObscuraColors.background,
       body: PageView.builder(
         controller: _pageController,
         itemCount: widget.photos.length,
@@ -82,13 +83,11 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: Colors.black,
-                    child: const Center(
-                      child: Icon(
-                        Icons.broken_image,
-                        color: Colors.white24,
-                        size: 64,
-                      ),
+                    color: ObscuraColors.background,
+                    child: const Icon(
+                      Icons.broken_image,
+                      color: ObscuraColors.textFaint,
+                      size: 64,
                     ),
                   );
                 },
@@ -104,12 +103,12 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
           right: 0,
           child: Container(
             height: 120,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black87,
+                  ObscuraColors.overlayDark,
                   Colors.transparent,
                 ],
               ),
@@ -124,9 +123,9 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
           child: IconButton(
             icon: const Icon(
               Icons.arrow_back,
-              color: Colors.white70,
+              color: ObscuraColors.textSecondary,
             ),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.pop(),
           ),
         ),
 
@@ -139,7 +138,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
             child: Text(
               isNegative ? 'Négatif' : 'Photo Développée',
               style: const TextStyle(
-                color: Colors.white70,
+                color: ObscuraColors.textSecondary,
                 fontSize: 16,
                 fontWeight: FontWeight.w300,
                 letterSpacing: 1.2,
@@ -155,13 +154,13 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
           right: 0,
           child: Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [
-                  Colors.black,
-                  Colors.black87,
+                  ObscuraColors.background,
+                  ObscuraColors.overlayDark,
                   Colors.transparent,
                 ],
               ),
@@ -180,13 +179,13 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white12,
+                          color: ObscuraColors.overlayLight,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           _getFilterName(photo.filter),
                           style: const TextStyle(
-                            color: Colors.white70,
+                            color: ObscuraColors.textSecondary,
                             fontSize: 12,
                           ),
                         ),
@@ -200,22 +199,22 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.2),
+                          color: ObscuraColors.primary.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Row(
+                        child: const Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: const [
+                          children: [
                             Icon(
                               Icons.blur_on,
                               size: 14,
-                              color: Colors.orange,
+                              color: ObscuraColors.primary,
                             ),
                             SizedBox(width: 4),
                             Text(
                               'Flou de mouvement',
                               style: TextStyle(
-                                color: Colors.orange,
+                                color: ObscuraColors.primary,
                                 fontSize: 12,
                               ),
                             ),
@@ -235,7 +234,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
                     _buildActionButton(
                       icon: Icons.delete_outline,
                       label: 'Supprimer',
-                      color: Colors.red,
+                      color: ObscuraColors.error,
                       onTap: () => _showDeleteConfirmation(context, photo),
                     ),
 
@@ -244,7 +243,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
                       _buildActionButton(
                         icon: Icons.developer_mode,
                         label: 'Développer',
-                        color: Colors.amber,
+                        color: ObscuraColors.primary,
                         isPrimary: true,
                         onTap: () => _developPhoto(context, photo),
                       ),
@@ -254,7 +253,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
                       _buildActionButton(
                         icon: Icons.share_outlined,
                         label: 'Partager',
-                        color: Colors.blue,
+                        color: ObscuraColors.share,
                         onTap: () => _sharePhoto(context, photo),
                       ),
                   ],
@@ -285,7 +284,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
           vertical: 12,
         ),
         decoration: BoxDecoration(
-          color: isPrimary ? color : color.withOpacity(0.2),
+          color: isPrimary ? color : color.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(25),
           border: Border.all(
             color: color,
@@ -297,14 +296,14 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
           children: [
             Icon(
               icon,
-              color: isPrimary ? Colors.black : color,
+              color: isPrimary ? ObscuraColors.background : color,
               size: 20,
             ),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
-                color: isPrimary ? Colors.black : color,
+                color: isPrimary ? ObscuraColors.background : color,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -318,20 +317,20 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
   void _developPhoto(BuildContext context, Photo photo) {
     showDialog(
       context: context,
-      barrierColor: Colors.black87,
+      barrierColor: ObscuraColors.overlayDark,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor: ObscuraColors.surface,
         title: const Text(
           'Développer le Négatif',
           style: TextStyle(
-            color: Colors.amber,
+            color: ObscuraColors.primary,
             fontSize: 20,
           ),
         ),
         content: const Text(
           'Cette photo va être développée et redressée.\n\nLe processus simule le développement chimique d\'une plaque photographique.',
           style: TextStyle(
-            color: Colors.white70,
+            color: ObscuraColors.textSecondary,
             fontSize: 14,
             height: 1.5,
           ),
@@ -341,29 +340,29 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
             onPressed: () => Navigator.pop(dialogContext),
             child: const Text(
               'Annuler',
-              style: TextStyle(color: Colors.white54),
+              style: TextStyle(color: ObscuraColors.textTertiary),
             ),
           ),
           ElevatedButton(
             onPressed: () {
               context.read<GalleryBloc>().add(DevelopPhoto(photo));
               Navigator.pop(dialogContext);
-              Navigator.pop(context); // Pop detail screen as the photo status changed
+              context.pop(); // Pop detail screen as the photo status changed
 
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Photo en cours de développement...'),
-                  backgroundColor: Colors.amber,
+                  backgroundColor: ObscuraColors.primary,
                   duration: Duration(seconds: 2),
                 ),
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber,
+              backgroundColor: ObscuraColors.primary,
             ),
             child: const Text(
               'Développer',
-              style: TextStyle(color: Colors.black),
+              style: TextStyle(color: ObscuraColors.background),
             ),
           ),
         ],
@@ -374,20 +373,20 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
   void _showDeleteConfirmation(BuildContext context, Photo photo) {
     showDialog(
       context: context,
-      barrierColor: Colors.black87,
+      barrierColor: ObscuraColors.overlayDark,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
+        backgroundColor: ObscuraColors.surface,
         title: const Text(
           'Supprimer la Photo',
           style: TextStyle(
-            color: Colors.red,
+            color: ObscuraColors.error,
             fontSize: 20,
           ),
         ),
         content: const Text(
           'Cette action est irréversible.',
           style: TextStyle(
-            color: Colors.white70,
+            color: ObscuraColors.textSecondary,
             fontSize: 14,
           ),
         ),
@@ -396,21 +395,21 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
             onPressed: () => Navigator.pop(dialogContext),
             child: const Text(
               'Annuler',
-              style: TextStyle(color: Colors.white54),
+              style: TextStyle(color: ObscuraColors.textTertiary),
             ),
           ),
           ElevatedButton(
             onPressed: () {
               context.read<GalleryBloc>().add(DeletePhoto(photo));
               Navigator.pop(dialogContext);
-              Navigator.pop(context); // Pop detail screen on delete
+              context.pop(); // Pop detail screen on delete
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: ObscuraColors.error,
             ),
             child: const Text(
               'Supprimer',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: ObscuraColors.textPrimary),
             ),
           ),
         ],
@@ -421,7 +420,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
   Future<void> _sharePhoto(BuildContext context, Photo photo) async {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: ObscuraColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -431,17 +430,17 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.image, color: Colors.white),
-                title: const Text('Partager l\'original', style: TextStyle(color: Colors.white)),
+                leading: const Icon(Icons.image, color: ObscuraColors.textPrimary),
+                title: const Text('Partager l\'original', style: TextStyle(color: ObscuraColors.textPrimary)),
                 onTap: () {
                   Navigator.pop(context);
                   _performShare(context, photo.path, photo);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.crop_free, color: Colors.amber),
-                title: const Text('Partager avec cadre (Polaroid)', style: TextStyle(color: Colors.white)),
-                subtitle: const Text('Ajoute la date et le filtre utilisé', style: TextStyle(color: Colors.white54)),
+                leading: const Icon(Icons.crop_free, color: ObscuraColors.primary),
+                title: const Text('Partager avec cadre (Polaroid)', style: TextStyle(color: ObscuraColors.textPrimary)),
+                subtitle: const Text('Ajoute la date et le filtre utilisé', style: TextStyle(color: ObscuraColors.textTertiary)),
                 onTap: () {
                   Navigator.pop(context);
                   _generateAndShareFramed(context, photo);
@@ -479,7 +478,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Erreur: $e'), backgroundColor: ObscuraColors.error),
         );
       }
     }
@@ -496,7 +495,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Impossible de partager: fichier introuvable'),
-              backgroundColor: Colors.red,
+              backgroundColor: ObscuraColors.error,
               duration: Duration(seconds: 2),
             ),
           );
@@ -529,7 +528,7 @@ class _PhotoDetailScreenState extends State<PhotoDetailScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur lors du partage: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: ObscuraColors.error,
             duration: const Duration(seconds: 3),
           ),
         );

@@ -1,10 +1,12 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:camera/camera.dart';
+import '../models/photo.dart';
 
 class SettingsRepository {
   static const String _keyInvertedViewfinder = 'inverted_viewfinder';
   static const String _keyImageQuality = 'image_quality';
   static const String _keyOnboardingCompleted = 'onboarding_completed';
+  static const String _keySelectedFilter = 'selected_filter';
 
   final SharedPreferences _prefs;
 
@@ -32,5 +34,19 @@ class SettingsRepository {
 
   Future<void> setOnboardingCompleted() async {
     await _prefs.setBool(_keyOnboardingCompleted, true);
+  }
+
+  /// Récupère le filtre sélectionné (persiste entre les sessions)
+  FilterType get selectedFilter {
+    final int? index = _prefs.getInt(_keySelectedFilter);
+    if (index == null || index < 0 || index >= FilterType.values.length) {
+      return FilterType.none;
+    }
+    return FilterType.values[index];
+  }
+
+  /// Sauvegarde le filtre sélectionné
+  Future<void> setSelectedFilter(FilterType filter) async {
+    await _prefs.setInt(_keySelectedFilter, filter.index);
   }
 }

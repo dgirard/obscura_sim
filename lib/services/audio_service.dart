@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'logger_service.dart';
 
 class AudioService {
   // On crée une nouvelle instance pour chaque son pour éviter les conflits d'état
@@ -11,7 +12,7 @@ class AudioService {
       await player.setReleaseMode(ReleaseMode.release);
       await player.play(AssetSource('sounds/shutter.mp3'));
     } catch (e) {
-      print('Audio error (shutter): $e');
+      AppLogger.audio('Error playing shutter: $e');
     }
   }
 
@@ -21,7 +22,7 @@ class AudioService {
       await player.setReleaseMode(ReleaseMode.release);
       await player.play(AssetSource('sounds/developing.mp3'));
     } catch (e) {
-      print('Audio error (developing): $e');
+      AppLogger.audio('Error playing developing: $e');
     }
   }
   

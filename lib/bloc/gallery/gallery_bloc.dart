@@ -2,10 +2,10 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:path_provider/path_provider.dart';
 import '../../models/photo.dart';
 import '../../services/database_service.dart';
 import '../../services/image_processing_service.dart';
+import '../../services/logger_service.dart';
 
 // Events
 abstract class GalleryEvent extends Equatable {
@@ -52,6 +52,15 @@ class DeletePhoto extends GalleryEvent {
   List<Object?> get props => [photo];
 }
 
+class LoadMorePhotos extends GalleryEvent {
+  final PhotoStatus status;
+
+  const LoadMorePhotos(this.status);
+
+  @override
+  List<Object?> get props => [status];
+}
+
 // States
 abstract class GalleryState extends Equatable {
   const GalleryState();
@@ -67,14 +76,36 @@ class GalleryLoading extends GalleryState {}
 class GalleryLoaded extends GalleryState {
   final List<Photo> negatives; // Photos non développées
   final List<Photo> developed; // Photos développées
+  final bool hasMoreNegatives;
+  final bool hasMoreDeveloped;
+  final bool isLoadingMore;
 
   const GalleryLoaded({
     required this.negatives,
     required this.developed,
+    this.hasMoreNegatives = false,
+    this.hasMoreDeveloped = false,
+    this.isLoadingMore = false,
   });
 
+  GalleryLoaded copyWith({
+    List<Photo>? negatives,
+    List<Photo>? developed,
+    bool? hasMoreNegatives,
+    bool? hasMoreDeveloped,
+    bool? isLoadingMore,
+  }) {
+    return GalleryLoaded(
+      negatives: negatives ?? this.negatives,
+      developed: developed ?? this.developed,
+      hasMoreNegatives: hasMoreNegatives ?? this.hasMoreNegatives,
+      hasMoreDeveloped: hasMoreDeveloped ?? this.hasMoreDeveloped,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    );
+  }
+
   @override
-  List<Object?> get props => [negatives, developed];
+  List<Object?> get props => [negatives, developed, hasMoreNegatives, hasMoreDeveloped, isLoadingMore];
 }
 
 class GalleryError extends GalleryState {
@@ -91,6 +122,8 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
   final DatabaseService _databaseService;
   final ImageProcessingService _imageService;
 
+  static const int _pageSize = 20;
+
   GalleryBloc({
     required DatabaseService databaseService,
     required ImageProcessingService imageService,
@@ -101,6 +134,7 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
     on<AddPhoto>(_onAddPhoto);
     on<DevelopPhoto>(_onDevelopPhoto);
     on<DeletePhoto>(_onDeletePhoto);
+    on<LoadMorePhotos>(_onLoadMorePhotos);
   }
 
   Future<void> _onLoadPhotos(
@@ -109,17 +143,73 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
   ) async {
     emit(GalleryLoading());
     try {
-      final photos = await _databaseService.getAllPhotos();
-      final negatives = photos
-          .where((photo) => photo.status == PhotoStatus.negative)
-          .toList();
-      final developed = photos
-          .where((photo) => photo.status == PhotoStatus.developed)
-          .toList();
+      // Charger la première page de chaque type
+      final negatives = await _databaseService.getPhotosPaginated(
+        limit: _pageSize,
+        offset: 0,
+        status: PhotoStatus.negative,
+      );
+      final developed = await _databaseService.getPhotosPaginated(
+        limit: _pageSize,
+        offset: 0,
+        status: PhotoStatus.developed,
+      );
 
-      emit(GalleryLoaded(negatives: negatives, developed: developed));
+      // Vérifier s'il y a plus de photos
+      final totalNegatives = await _databaseService.getPhotosCount(status: PhotoStatus.negative);
+      final totalDeveloped = await _databaseService.getPhotosCount(status: PhotoStatus.developed);
+
+      emit(GalleryLoaded(
+        negatives: negatives,
+        developed: developed,
+        hasMoreNegatives: negatives.length < totalNegatives,
+        hasMoreDeveloped: developed.length < totalDeveloped,
+      ));
     } catch (e) {
       emit(GalleryError('Erreur de chargement: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onLoadMorePhotos(
+    LoadMorePhotos event,
+    Emitter<GalleryState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! GalleryLoaded || currentState.isLoadingMore) return;
+
+    final isNegative = event.status == PhotoStatus.negative;
+    final hasMore = isNegative ? currentState.hasMoreNegatives : currentState.hasMoreDeveloped;
+    if (!hasMore) return;
+
+    emit(currentState.copyWith(isLoadingMore: true));
+
+    try {
+      final currentList = isNegative ? currentState.negatives : currentState.developed;
+      final newPhotos = await _databaseService.getPhotosPaginated(
+        limit: _pageSize,
+        offset: currentList.length,
+        status: event.status,
+      );
+
+      final total = await _databaseService.getPhotosCount(status: event.status);
+      final updatedList = [...currentList, ...newPhotos];
+
+      if (isNegative) {
+        emit(currentState.copyWith(
+          negatives: updatedList,
+          hasMoreNegatives: updatedList.length < total,
+          isLoadingMore: false,
+        ));
+      } else {
+        emit(currentState.copyWith(
+          developed: updatedList,
+          hasMoreDeveloped: updatedList.length < total,
+          isLoadingMore: false,
+        ));
+      }
+    } catch (e) {
+      emit(currentState.copyWith(isLoadingMore: false));
+      AppLogger.error('Erreur de pagination', e);
     }
   }
 
@@ -139,8 +229,8 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
         invert: false, 
       );
 
-      // Créer la miniature
-      final thumbnail = await _imageService.createThumbnail(processedPath);
+      // Créer la miniature (TODO: stocker dans la BDD via Photo.thumbnail)
+      await _imageService.createThumbnail(processedPath);
 
       final photo = Photo(
         id: DateTime.now().millisecondsSinceEpoch,
@@ -187,7 +277,7 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
       } catch (e) {
         // Si la sauvegarde dans MediaStore échoue, continuer quand même
         // (la photo sera toujours dans l'app)
-        print('Avertissement: Échec de la sauvegarde dans la galerie publique: $e');
+        AppLogger.warning('Échec de la sauvegarde dans la galerie publique: $e');
       }
 
       final updatedPhoto = event.photo.copyWith(
@@ -217,7 +307,7 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
           });
         } catch (e) {
           // Si la suppression du MediaStore échoue, continuer quand même
-          print('Avertissement: Échec de la suppression dans MediaStore: $e');
+          AppLogger.warning('Échec de la suppression dans MediaStore: $e');
         }
       }
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../bloc/camera/camera_bloc.dart';
 import '../bloc/camera/camera_event.dart';
@@ -12,9 +13,9 @@ import '../bloc/filter/filter_bloc.dart';
 import '../bloc/gallery/gallery_bloc.dart';
 import '../bloc/settings/settings_bloc.dart';
 import '../models/photo.dart';
-import 'filter_selection_screen.dart';
-import 'gallery_screen.dart';
-import 'settings_screen.dart';
+import '../navigation/app_router.dart';
+import '../services/logger_service.dart';
+import '../theme/colors.dart';
 
 class SimpleViewfinderScreen extends StatefulWidget {
   const SimpleViewfinderScreen({super.key});
@@ -108,7 +109,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
       const SnackBar(
         content: Text('Photo sauvegardée'),
         duration: Duration(seconds: 1),
-        backgroundColor: Colors.green,
+        backgroundColor: ObscuraColors.success,
       ),
     );
   }
@@ -116,7 +117,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: ObscuraColors.background,
       body: MultiBlocListener(
         listeners: [
           BlocListener<CameraBloc, CameraState>(
@@ -125,7 +126,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(state.message),
-                    backgroundColor: Colors.red,
+                    backgroundColor: ObscuraColors.error,
                   ),
                 );
               } else if (state is CameraCaptured) {
@@ -149,11 +150,11 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.no_photography, color: Colors.red, size: 64),
+                            const Icon(Icons.no_photography, color: ObscuraColors.error, size: 64),
                             const SizedBox(height: 16),
                             const Text(
                               'Permission caméra requise',
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(color: ObscuraColors.textPrimary),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton(
@@ -165,7 +166,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                       )
                     else
                       const Center(
-                        child: CircularProgressIndicator(color: Colors.white24),
+                        child: CircularProgressIndicator(color: ObscuraColors.textSubtle),
                       ),
 // ...
 
@@ -178,7 +179,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.amber, width: 1.5),
+                            border: Border.all(color: ObscuraColors.focusIndicator, width: 1.5),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -188,13 +189,13 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                     if (state is CameraCapturing)
                       Positioned.fill(
                         child: Container(
-                          color: state.isInstant ? Colors.black : Colors.black.withOpacity(0.3),
+                          color: state.isInstant ? ObscuraColors.background : ObscuraColors.overlayLight,
                           child: state.isInstant
                               ? const Center(
                                   child: Text(
                                     'Capture...',
                                     style: TextStyle(
-                                      color: Colors.white54,
+                                      color: ObscuraColors.textHint,
                                       fontSize: 16,
                                       fontWeight: FontWeight.w300,
                                       letterSpacing: 2,
@@ -228,9 +229,9 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                             height: 40,
                             child: SliderTheme(
                               data: SliderTheme.of(context).copyWith(
-                                activeTrackColor: Colors.amber,
-                                inactiveTrackColor: Colors.white24,
-                                thumbColor: Colors.amber,
+                                activeTrackColor: ObscuraColors.primary,
+                                inactiveTrackColor: ObscuraColors.textSubtle,
+                                thumbColor: ObscuraColors.primary,
                                 trackHeight: 2.0,
                                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
                                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 14.0),
@@ -256,13 +257,13 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                         bottom: 120,
                         child: Row(
                           children: [
-                            const Icon(Icons.zoom_out, color: Colors.white54, size: 20),
+                            const Icon(Icons.zoom_out, color: ObscuraColors.textHint, size: 20),
                             Expanded(
                               child: SliderTheme(
                                 data: SliderTheme.of(context).copyWith(
-                                  activeTrackColor: Colors.white,
-                                  inactiveTrackColor: Colors.white24,
-                                  thumbColor: Colors.white,
+                                  activeTrackColor: ObscuraColors.textPrimary,
+                                  inactiveTrackColor: ObscuraColors.textSubtle,
+                                  thumbColor: ObscuraColors.textPrimary,
                                   trackHeight: 2.0,
                                   thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
                                   overlayShape: const RoundSliderOverlayShape(overlayRadius: 16.0),
@@ -277,7 +278,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                                 ),
                               ),
                             ),
-                            const Icon(Icons.zoom_in, color: Colors.white54, size: 20),
+                            const Icon(Icons.zoom_in, color: ObscuraColors.textHint, size: 20),
                           ],
                         ),
                       ),
@@ -291,7 +292,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                           onPressed: () => context.read<CameraBloc>().add(ToggleFlash()),
                           icon: Icon(
                             _getFlashIcon(state.flashMode),
-                            color: state.flashMode == FlashMode.off ? Colors.white38 : Colors.amber,
+                            color: state.flashMode == FlashMode.off ? ObscuraColors.flashInactive : ObscuraColors.flashActive,
                             size: 28,
                           ),
                         ),
@@ -302,13 +303,10 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                       top: 50,
                       left: 70,
                       child: IconButton(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                        ),
+                        onPressed: () => context.push(AppRoutes.settings),
                         icon: const Icon(
                           Icons.settings,
-                          color: Colors.white38,
+                          color: ObscuraColors.textDisabled,
                           size: 28,
                         ),
                       ),
@@ -372,13 +370,13 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.red.withOpacity(0.7),
+            color: ObscuraColors.motionWarningOverlay,
             borderRadius: BorderRadius.circular(20),
           ),
           child: const Text(
             'Stabilisez l\'appareil',
             style: TextStyle(
-              color: Colors.white,
+              color: ObscuraColors.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -399,12 +397,12 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.black54,
+                color: ObscuraColors.overlayMedium,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 _getFilterName(filterState.selectedFilter),
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                style: const TextStyle(color: ObscuraColors.textSecondary, fontSize: 12),
               ),
             ),
           );
@@ -434,7 +432,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
         gradient: LinearGradient(
           begin: isPortrait ? Alignment.topCenter : Alignment.centerLeft,
           end: isPortrait ? Alignment.bottomCenter : Alignment.centerRight,
-          colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+          colors: [Colors.transparent, ObscuraColors.overlayDark],
         ),
       ),
       child: Flex(
@@ -445,13 +443,10 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
           Transform.rotate(
             angle: isPortrait ? 0 : -1.5708,
             child: IconButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const GalleryScreen()),
-              ),
+              onPressed: () => context.push(AppRoutes.gallery),
               icon: const Icon(Icons.photo_library),
               iconSize: 30,
-              color: Colors.white70,
+              color: ObscuraColors.textSecondary,
             ),
           ),
 
@@ -459,7 +454,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
           GestureDetector(
             onTap: () {
               if (!isCapturing) {
-                print('LOG_PERF: Button tapped at ${DateTime.now().millisecondsSinceEpoch}');
+                AppLogger.perf('Button tapped at ${DateTime.now().millisecondsSinceEpoch}');
                 context.read<CameraBloc>().add(
                   InstantCapture(isPortrait: isPortrait)
                 );
@@ -467,7 +462,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
             },
             onLongPressStart: (_) {
               if (!isCapturing) {
-                print('LOG_PERF: Long press start at ${DateTime.now().millisecondsSinceEpoch}');
+                AppLogger.perf('Long press start at ${DateTime.now().millisecondsSinceEpoch}');
                 context.read<CameraBloc>().add(
                   StartCapture(isPortrait: isPortrait)
                 );
@@ -480,7 +475,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 4),
+                border: Border.all(color: ObscuraColors.captureButtonBorder, width: 4),
               ),
               child: isCapturing
                   ? Padding(
@@ -488,11 +483,11 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                       child: CircularProgressIndicator(
                         value: progress,
                         strokeWidth: 3,
-                        backgroundColor: Colors.white24,
+                        backgroundColor: ObscuraColors.textSubtle,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          (state is CameraCapturing && state.motionLevel > 1.0) 
-                              ? Colors.red 
-                              : Colors.white
+                          (state is CameraCapturing && state.motionLevel > 1.0)
+                              ? ObscuraColors.error
+                              : ObscuraColors.textPrimary
                         ),
                       ),
                     )
@@ -500,7 +495,7 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
                       margin: const EdgeInsets.all(8),
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white,
+                        color: ObscuraColors.textPrimary,
                       ),
                     ),
             ),
@@ -510,13 +505,10 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
           Transform.rotate(
             angle: isPortrait ? 0 : -1.5708,
             child: IconButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FilterSelectionScreen()),
-              ),
+              onPressed: () => context.push(AppRoutes.filterSelection),
               icon: const Icon(Icons.filter_vintage),
               iconSize: 30,
-              color: Colors.white70,
+              color: ObscuraColors.textSecondary,
             ),
           ),
         ],
@@ -549,13 +541,13 @@ class _SimpleViewfinderScreenState extends State<SimpleViewfinderScreen>
     return Stack(
       fit: StackFit.expand,
       children: [
-        Container(color: Colors.black),
+        Container(color: ObscuraColors.background),
         // Text indicator to show immediate feedback while image loads/fades
         const Center(
           child: Text(
             'Développement...',
             style: TextStyle(
-              color: Colors.white54,
+              color: ObscuraColors.textHint,
               fontSize: 16,
               fontWeight: FontWeight.w300,
               letterSpacing: 2,

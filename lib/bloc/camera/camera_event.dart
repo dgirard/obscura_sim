@@ -60,10 +60,10 @@ class StartCapture extends CameraEvent {
 
 class UpdateCaptureProgress extends CameraEvent {
   final double progress;
-  final double motionLevel;
-  const UpdateCaptureProgress(this.progress, this.motionLevel);
+  final double elapsedSeconds;
+  const UpdateCaptureProgress(this.progress, this.elapsedSeconds);
   @override
-  List<Object> get props => [progress, motionLevel];
+  List<Object> get props => [progress, elapsedSeconds];
 }
 
 class FinishCapture extends CameraEvent {}

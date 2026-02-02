@@ -7,6 +7,7 @@ import '../bloc/camera/camera_state.dart';
 import '../bloc/filter/filter_bloc.dart';
 import '../bloc/gallery/gallery_bloc.dart';
 import '../models/photo.dart';
+import '../services/logger_service.dart';
 import '../widgets/inverted_camera_preview.dart';
 import 'filter_selection_screen.dart';
 import 'gallery_screen.dart';
@@ -60,9 +61,9 @@ class _ViewfinderScreenState extends State<ViewfinderScreen> {
         },
         builder: (context, state) {
           // Debug pour voir l'état
-          print('Camera State: $state');
+          AppLogger.camera('State: $state');
           if (state is CameraReady) {
-            print('Controller initialized: ${state.controller.value.isInitialized}');
+            AppLogger.camera('Controller initialized: ${state.controller.value.isInitialized}');
           }
 
           return Stack(

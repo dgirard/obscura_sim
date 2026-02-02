@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,14 +7,13 @@ import 'bloc/camera/camera_bloc.dart';
 import 'bloc/filter/filter_bloc.dart';
 import 'bloc/gallery/gallery_bloc.dart';
 import 'bloc/settings/settings_bloc.dart';
+import 'navigation/app_router.dart';
 import 'repositories/camera_repository.dart';
 import 'repositories/settings_repository.dart';
-import 'screens/viewfinder_screen.dart';
-import 'screens/simple_viewfinder_screen.dart';
-import 'screens/onboarding_screen.dart';
 import 'services/database_service.dart';
 import 'services/image_processing_service.dart';
 import 'services/audio_service.dart';
+import 'theme/obscura_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,22 +24,38 @@ void main() async {
   // Cela permet une rotation libre de l'application
 
   // Style de la barre de statut
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.black,
-      systemNavigationBarIconBrightness: Brightness.light,
-    ),
-  );
+  SystemChrome.setSystemUIOverlayStyle(ObscuraTheme.systemOverlayStyle);
 
   runApp(ObscuraSimApp(prefs: prefs));
 }
 
-class ObscuraSimApp extends StatelessWidget {
+class ObscuraSimApp extends StatefulWidget {
   final SharedPreferences prefs;
 
   const ObscuraSimApp({super.key, required this.prefs});
+
+  @override
+  State<ObscuraSimApp> createState() => _ObscuraSimAppState();
+}
+
+class _ObscuraSimAppState extends State<ObscuraSimApp> {
+  late final SettingsRepository _settingsRepository;
+  late final SettingsBloc _settingsBloc;
+  late final AppRouter _appRouter;
+
+  @override
+  void initState() {
+    super.initState();
+    _settingsRepository = SettingsRepository(widget.prefs);
+    _settingsBloc = SettingsBloc(repository: _settingsRepository);
+    _appRouter = AppRouter(settingsBloc: _settingsBloc);
+  }
+
+  @override
+  void dispose() {
+    _settingsBloc.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,20 +65,24 @@ class ObscuraSimApp extends StatelessWidget {
         RepositoryProvider(create: (context) => ImageProcessingService()),
         RepositoryProvider(create: (context) => AudioService()),
         RepositoryProvider<CameraRepository>(create: (context) => CameraRepositoryImpl()),
-        RepositoryProvider(create: (context) => SettingsRepository(prefs)),
+        RepositoryProvider.value(value: _settingsRepository),
       ],
       child: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (context) => SettingsBloc(repository: context.read<SettingsRepository>())),
+          BlocProvider.value(value: _settingsBloc),
           BlocProvider(
             create: (context) => CameraBloc(
               imageProcessingService: context.read<ImageProcessingService>(),
               cameraRepository: context.read<CameraRepository>(),
-              settingsRepository: context.read<SettingsRepository>(), // Pass SettingsRepository
+              settingsRepository: context.read<SettingsRepository>(),
               audioService: context.read<AudioService>(),
             ),
           ),
-          BlocProvider(create: (context) => FilterBloc()),
+          BlocProvider(
+            create: (context) => FilterBloc(
+              repository: context.read<SettingsRepository>(),
+            ),
+          ),
           BlocProvider(
             create: (context) => GalleryBloc(
               databaseService: context.read<DatabaseService>(),
@@ -72,174 +90,11 @@ class ObscuraSimApp extends StatelessWidget {
             ),
           ),
         ],
-        child: MaterialApp(
-          title: 'Obscura', // Renamed to match manifest
+        child: MaterialApp.router(
+          title: 'Obscura',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            brightness: Brightness.dark,
-            primaryColor: Colors.black,
-            scaffoldBackgroundColor: Colors.black,
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.black,
-              elevation: 0,
-              titleTextStyle: TextStyle(
-                color: Colors.white70,
-                fontSize: 18,
-                fontWeight: FontWeight.w300,
-                letterSpacing: 1.2,
-              ),
-              iconTheme: IconThemeData(
-                color: Colors.white70,
-              ),
-            ),
-            textTheme: const TextTheme(
-              bodyLarge: TextStyle(color: Colors.white70),
-              bodyMedium: TextStyle(color: Colors.white70),
-              titleLarge: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w300,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-          home: const SplashScreen(),
-        ),
-      ),
-    );
-  }
-}
-
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-  Timer? _navigationTimer;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
-    ));
-
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-    ));
-
-    _controller.forward();
-
-    // Navigation vers l'écran principal après l'animation
-    _navigationTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        final settingsBloc = context.read<SettingsBloc>();
-        final isOnboardingCompleted = settingsBloc.state.isOnboardingCompleted;
-
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                isOnboardingCompleted
-                    ? const SimpleViewfinderScreen()
-                    : const OnboardingScreen(),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 800),
-          ),
-        );
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _navigationTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return FadeTransition(
-              opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white24,
-                          width: 2,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        size: 60,
-                        color: Colors.white24,
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    const Text(
-                      'OBSCURASIM',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w200,
-                        letterSpacing: 6,
-                        color: Colors.white70,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Camera Obscura',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w300,
-                        letterSpacing: 2,
-                        color: Colors.white38,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+          theme: ObscuraTheme.dark,
+          routerConfig: _appRouter.router,
         ),
       ),
     );

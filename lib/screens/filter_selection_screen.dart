@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../bloc/filter/filter_bloc.dart';
 import '../models/photo.dart';
+import '../theme/colors.dart';
 
 class FilterSelectionScreen extends StatelessWidget {
   const FilterSelectionScreen({super.key});
@@ -10,21 +12,21 @@ class FilterSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: ObscuraColors.surface,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text(
           'Sélection de Filtres',
           style: TextStyle(
-            color: Colors.white70,
+            color: ObscuraColors.textSecondary,
             fontSize: 18,
             fontWeight: FontWeight.w300,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white70),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.close, color: ObscuraColors.textSecondary),
+          onPressed: () => context.pop(),
         ),
         centerTitle: true,
       ),
@@ -44,7 +46,7 @@ class FilterSelectionScreen extends StatelessWidget {
                   FilterType.none,
                   'Aucun',
                   Icons.clear,
-                  Colors.grey,
+                  ObscuraColors.filterNone,
                   selectedFilter == FilterType.none,
                 ),
                 _buildFilterOption(
@@ -52,7 +54,7 @@ class FilterSelectionScreen extends StatelessWidget {
                   FilterType.monochrome,
                   'Monochrome',
                   Icons.filter_b_and_w,
-                  Colors.blueGrey,
+                  ObscuraColors.filterMonochrome,
                   selectedFilter == FilterType.monochrome,
                 ),
                 _buildFilterOption(
@@ -60,7 +62,7 @@ class FilterSelectionScreen extends StatelessWidget {
                   FilterType.sepia,
                   'Sépia',
                   Icons.gradient,
-                  Colors.brown,
+                  ObscuraColors.filterSepia,
                   selectedFilter == FilterType.sepia,
                 ),
                 _buildFilterOption(
@@ -68,7 +70,7 @@ class FilterSelectionScreen extends StatelessWidget {
                   FilterType.glassPlate,
                   'Plaque de Verre',
                   Icons.lens,
-                  Colors.indigo,
+                  ObscuraColors.filterGlassPlate,
                   selectedFilter == FilterType.glassPlate,
                 ),
                 _buildFilterOption(
@@ -76,7 +78,7 @@ class FilterSelectionScreen extends StatelessWidget {
                   FilterType.cyanotype,
                   'Cyanotype',
                   Icons.water_drop,
-                  Colors.cyan,
+                  ObscuraColors.filterCyanotype,
                   selectedFilter == FilterType.cyanotype,
                 ),
                 _buildFilterOption(
@@ -84,7 +86,7 @@ class FilterSelectionScreen extends StatelessWidget {
                   FilterType.daguerreotype,
                   'Daguerréotype',
                   Icons.brightness_high,
-                  Colors.amber,
+                  ObscuraColors.filterDaguerreotype,
                   selectedFilter == FilterType.daguerreotype,
                 ),
               ],
@@ -107,14 +109,14 @@ class FilterSelectionScreen extends StatelessWidget {
       onTap: () {
         context.read<FilterBloc>().add(SelectFilter(filter));
         HapticFeedback.selectionClick();
-        Navigator.pop(context);
+        context.pop();
       },
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.3) : Colors.black45,
+          color: isSelected ? color.withValues(alpha: 0.3) : ObscuraColors.overlayMedium,
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
-            color: isSelected ? color : Colors.white24,
+            color: isSelected ? color : ObscuraColors.textSubtle,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -124,13 +126,13 @@ class FilterSelectionScreen extends StatelessWidget {
             Icon(
               icon,
               size: 48,
-              color: isSelected ? color : Colors.white54,
+              color: isSelected ? color : ObscuraColors.textHint,
             ),
             const SizedBox(height: 12),
             Text(
               name,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white70,
+                color: isSelected ? ObscuraColors.textPrimary : ObscuraColors.textSecondary,
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w500 : FontWeight.w300,
               ),
@@ -149,7 +151,7 @@ class FilterSelectionScreen extends StatelessWidget {
                 child: const Text(
                   'Actif',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: ObscuraColors.textPrimary,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),

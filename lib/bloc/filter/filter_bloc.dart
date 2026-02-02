@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../models/photo.dart';
+import '../../repositories/settings_repository.dart';
 
 // Events
 abstract class FilterEvent extends Equatable {
@@ -18,6 +19,8 @@ class SelectFilter extends FilterEvent {
   @override
   List<Object?> get props => [filter];
 }
+
+class LoadSavedFilter extends FilterEvent {}
 
 // States
 abstract class FilterState extends Equatable {
@@ -38,9 +41,27 @@ class FilterSelected extends FilterState {
 
 // BLoC
 class FilterBloc extends Bloc<FilterEvent, FilterState> {
-  FilterBloc() : super(const FilterSelected(FilterType.none)) {
-    on<SelectFilter>((event, emit) {
-      emit(FilterSelected(event.filter));
-    });
+  final SettingsRepository _repository;
+
+  FilterBloc({required SettingsRepository repository})
+      : _repository = repository,
+        super(FilterSelected(repository.selectedFilter)) {
+    on<SelectFilter>(_onSelectFilter);
+    on<LoadSavedFilter>(_onLoadSavedFilter);
+  }
+
+  Future<void> _onSelectFilter(
+    SelectFilter event,
+    Emitter<FilterState> emit,
+  ) async {
+    await _repository.setSelectedFilter(event.filter);
+    emit(FilterSelected(event.filter));
+  }
+
+  void _onLoadSavedFilter(
+    LoadSavedFilter event,
+    Emitter<FilterState> emit,
+  ) {
+    emit(FilterSelected(_repository.selectedFilter));
   }
 }
